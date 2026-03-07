@@ -55,9 +55,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Configure Multer for file uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const dir = './uploads';
+        // Use /tmp in production (Vercel) because the root is read-only
+        const dir = process.env.NODE_ENV === 'production' ? '/tmp' : './uploads';
         if (!fs.existsSync(dir)){
-            fs.mkdirSync(dir);
+            fs.mkdirSync(dir, { recursive: true });
         }
         cb(null, dir);
     },
