@@ -80,6 +80,7 @@
 <script>
   document.addEventListener('DOMContentLoaded', async function(){
     const userStr = localStorage.getItem('santander_user');
+    let currentTransactions = []; // To store transactions for download
     if(!userStr){ window.location.href='login.html'; return; }
     const user = JSON.parse(userStr);
 
@@ -134,23 +135,80 @@
         const res = await fetch(url);
         const data = await res.json();
         if(data.success){
+          currentTransactions = data.transactions; // Store for download
           if(data.transactions.length===0){
             container.innerHTML='<div class="alert alert-info">No transactions found for the selected period.</div>';
             return;
           }
           const rows=data.transactions.map(tx=>{
-            const d=new Date(tx.created_at).toLocaleDateString('en-GB');
+            const d=new Date(tx.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
             const isDebit=tx.transaction_type.toLowerCase().includes('debit')||tx.transaction_type.toLowerCase().includes('withdrawal');
             const amtClass=isDebit?'text-danger':'text-success';
             const sign=isDebit?'-':'+';
             return `<tr><td>${d}</td><td>${tx.description||tx.transaction_type}</td><td>${tx.transaction_type}</td><td class="${amtClass}">${sign}£${parseFloat(tx.amount).toFixed(2)}</td><td>£${parseFloat(tx.balance_after).toFixed(2)}</td></tr>`;
           }).join('');
-          container.innerHTML=`<div class="table-responsive"><table class="table table-hover"><thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th>Balance</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+          container.innerHTML=`
+            <div class="card shadow-sm border-0">
+              <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                  <h5 class="card-title fw-bold mb-0">Transaction History</h5>
+                  <button class="btn btn-outline-danger" onclick="downloadStatement()">
+                    <i class="bi bi-download me-2"></i>Download Statement
+                  </button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead class="table-light">
+                      <tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th>Balance</th></tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          `;
         }else{
           container.innerHTML=`<div class="alert alert-danger">${data.message}</div>`;
         }
       }catch(err){console.error(err);container.innerHTML='<div class="alert alert-danger">Error loading statements.</div>';}    
     });
+
+    window.downloadStatement = function() {
+      if (currentTransactions.length === 0) {
+          alert('No transactions to download.');
+          return;
+      }
+
+      const headers = ['Date', 'Description', 'Type', 'Amount', 'Balance After'];
+      let csvContent = headers.join(',') + '\n';
+
+      currentTransactions.forEach(tx => {
+          const date = new Date(tx.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+          const description = `"${(tx.description || tx.transaction_type).replace(/"/g, '""')}"`;
+          const type = tx.transaction_type;
+          const amount = tx.amount;
+          const balance = tx.balance_after;
+
+          const row = [date, description, type, amount, balance].join(',');
+          csvContent += row + '\n';
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+
+      const accountSelect = document.getElementById('accountSelect');
+      const periodSelect = document.getElementById('periodSelect');
+      const accountNumber = accountSelect.value;
+      const periodText = periodSelect.options[periodSelect.selectedIndex].text.replace(/\s+/g, '-');
+      
+      link.setAttribute('download', `statement-${accountNumber}-${periodText}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   });
   function logout(){localStorage.removeItem('santander_user');window.location.href='index.html';}
 </script>
