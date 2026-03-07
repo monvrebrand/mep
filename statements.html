@@ -124,10 +124,11 @@
       const container = document.getElementById('statementsContainer');
       container.innerHTML='<div class="text-center py-5"><div class="spinner-border text-danger" role="status"><span class="visually-hidden">Loading...</span></div></div>';
       try{
-        let url = `/api/account/${accountNumber}/transactions?limit=0`;
+        let url = `/api/account/${accountNumber}/transactions`;
         if (period) {
             const [year, month] = period.split('-');
-            url += `&year=${year}&month=${month}`;
+            // Add '?' only if we have parameters
+            url += `?year=${year}&month=${month}`;
         }
 
         const res = await fetch(url);
