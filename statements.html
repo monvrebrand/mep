@@ -201,6 +201,12 @@
           console.warn('Logo could not be loaded for PDF', e);
       }
 
+      // Add Bank Name under logo
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(220, 53, 69); // Santander Red
+      doc.text("Santander", 160, 25);
+
       // 2. Header & Account Info
       doc.setFontSize(18);
       doc.setTextColor(220, 53, 69); // Santander Red
