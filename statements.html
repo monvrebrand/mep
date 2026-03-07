@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>santander | View Statements</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="css/main.css" rel="stylesheet">
+</head>
+<body class="index-page">
+<header id="header" class="header d-flex align-items-center" style="background-color: red;">
+  <div class="container-fluid container-xl d-flex align-items-center justify-content-between">
+      <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      <nav id="navmenu" class="navmenu">
+          <ul>
+              <li><a href="personal.html" class="active text-white">Personal</a></li>
+              <li><a href="private.html" class="text-white">Private</a></li>
+              <li><a href="business.html" class="text-white">Business</a></li>
+              <li><a href="corporate.html" class="text-white">Corporate</a></li>
+          </ul>
+      </nav>
+
+      <div class="ms-auto">
+            <a class="btn-getstarted" href="inside.html">Dashboard</a>
+            <a class="btn-getstarted" href="customer-support.html">Contact</a>
+            <button class="btn-getstarted bg-white border-0" onclick="logout()" style="color: red;">Log out</button>
+    </div>
+  </div>
+</header>
+<header id="header" class="header align-items-center">
+  <div class="container-fluid container-xl position-relative d-flex align-items-center">
+    <a href="inside.html" class="logo d-flex align-items-center me-auto">
+      <img src="img/logo.png" alt="" class="img-fluid" >
+      <h4 class="pt-3 fw-bold" style="color: red;">Santander</h4>
+    </a>
+    <nav id="navmenu" class="navmenu"></nav>
+  </div>
+</header>
+<main class="main">
+  <div class="container mt-5">
+      <div class="row mb-4"><div class="col-12"><a href="inside.html" class="text-decoration-none" style="color: red;"><i class="bi bi-arrow-left me-2"></i>Back to Dashboard</a></div></div>
+      <div class="row mb-4">
+          <div class="col-lg-6 offset-lg-3">
+              <div class="card shadow-sm border-0 p-4">
+                  <form id="statementForm" class="row g-3">
+                      <div class="col-md-6">
+                          <label for="accountSelect" class="form-label">Account</label>
+                          <select id="accountSelect" class="form-select" required>
+                              <option value="">Choose account</option>
+                          </select>
+                      </div>
+                      <div class="col-md-3">
+                          <label for="startDate" class="form-label">From</label>
+                          <input type="date" id="startDate" class="form-control">
+                      </div>
+                      <div class="col-md-3">
+                          <label for="endDate" class="form-label">To</label>
+                          <input type="date" id="endDate" class="form-control">
+                      </div>
+                      <div class="col-12 text-end">
+                          <button type="submit" class="btn btn-danger">Show Statements</button>
+                      </div>
+                  </form>
+              </div>
+          </div>
+      </div>
+      <div class="row">
+          <div class="col-12" id="statementsContainer">
+              <!-- filled by JS -->
+          </div>
+      </div>
+  </div>
+</main>
+<hr />
+<footer class="text-center text-dark"><div class="container"><section class="mb-5 mt-5"><div class="row d-flex justify-content-start"><div class="col-lg-12"><p></p></div></div></section><section class="text-center mb-5"><a href="" class="text-white me-4"><i class="fab fa-facebook-f"></i></a><a href="" class="text-white me-4"><i class="fab fa-twitter"></i></a><a href="" class="text-white me-4"><i class="fab fa-google"></i></a><a href="" class="text-white me-4"><i class="fab fa-instagram"></i></a><a href="" class="text-white me-4"><i class="fab fa-linkedin"></i></a><a href="" class="text-white me-4"><i class="fab fa-github"></i></a></section></div></footer>
+<script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="js/main.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', async function(){
+    const userStr = localStorage.getItem('santander_user');
+    if(!userStr){ window.location.href='login.html'; return; }
+    const user = JSON.parse(userStr);
+
+    try{
+      const dash=await fetch(`/api/user/${user.username}/dashboard`);
+      const dd=await dash.json();
+      if(dd.success){
+        const sel = document.getElementById('accountSelect');
+        dd.accounts.forEach(acc=>{
+          const opt=document.createElement('option'); opt.value=acc.account_number;
+          opt.textContent=`${acc.account_type} - ${acc.account_number}`;
+          sel.appendChild(opt);
+        });
+      }
+    }catch(e){console.error('load accounts',e);}    
+
+    document.getElementById('statementForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      const acct = document.getElementById('accountSelect').value;
+      const start = document.getElementById('startDate').value;
+      const end = document.getElementById('endDate').value;
+      const container = document.getElementById('statementsContainer');
+      container.innerHTML='<div class="text-center py-5"><div class="spinner-border text-danger" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+      try{
+        let url = `/api/account/${acct}/transactions?limit=0`;
+        if(start) url += `&startDate=${start}`;
+        if(end) url += `&endDate=${end}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if(data.success){
+          if(data.transactions.length===0){
+            container.innerHTML='<div class="alert alert-info">No transactions found for selected period.</div>';
+            return;
+          }
+          const rows=data.transactions.map(tx=>{
+            const d=new Date(tx.created_at).toLocaleDateString('en-GB');
+            const isDebit=tx.transaction_type.toLowerCase().includes('debit')||tx.transaction_type.toLowerCase().includes('withdrawal');
+            const amtClass=isDebit?'text-danger':'text-success';
+            const sign=isDebit?'-':'+';
+            return `<tr><td>${d}</td><td>${tx.description||tx.transaction_type}</td><td>${tx.transaction_type}</td><td class="${amtClass}">${sign}£${parseFloat(tx.amount).toFixed(2)}</td><td>£${parseFloat(tx.balance_after).toFixed(2)}</td></tr>`;
+          }).join('');
+          container.innerHTML=`<div class="table-responsive"><table class="table table-hover"><thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th><th>Balance</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        }else{
+          container.innerHTML=`<div class="alert alert-danger">${data.message}</div>`;
+        }
+      }catch(err){console.error(err);container.innerHTML='<div class="alert alert-danger">Error loading statements.</div>';}    
+    });
+  });
+  function logout(){localStorage.removeItem('santander_user');window.location.href='index.html';}
+</script>
+</body>
+</html>

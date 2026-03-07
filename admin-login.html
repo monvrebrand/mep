@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Santander | Admin Login</title>
+  <meta name="description" content="Admin Panel Login">
+  <meta name="keywords" content="">
+
+  <!-- Favicons -->
+  <link href="" rel="icon">
+  <link href="" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="css/main.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #dc3545 0%, #a02834 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 400px;
+      margin: auto;
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .login-header {
+      background-color: #dc3545;
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+    }
+
+    .login-header h2 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .login-header p {
+      margin: 8px 0 0 0;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .login-body {
+      padding: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .form-control {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 12px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus {
+      border-color: #dc3545;
+      box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+      outline: none;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .login-btn:hover {
+      background-color: #a02834;
+    }
+
+    .login-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .error-message {
+      display: none;
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .spinner-border {
+      width: 20px;
+      height: 20px;
+    }
+
+    .info-box {
+      background-color: #e7f3ff;
+      border-left: 4px solid #2196F3;
+      padding: 12px;
+      margin-top: 20px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .demo-credentials {
+      margin-top: 10px;
+      font-size: 12px;
+    }
+
+    .demo-credentials strong {
+      display: block;
+      color: #dc3545;
+      margin-top: 8px;
+    }
+
+    .back-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .back-link a {
+      color: #dc3545;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .back-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="login-container">
+    <div class="login-card">
+      <!-- Login Header -->
+      <div class="login-header">
+        <h2>
+          <i class="bi bi-shield-lock"></i> Admin Panel
+        </h2>
+        <p>Santander UK</p>
+      </div>
+
+      <!-- Login Form -->
+      <div class="login-body">
+        <form id="loginForm">
+          <!-- Error Message -->
+          <div class="error-message" id="errorMessage"></div>
+
+          <!-- Username -->
+          <div class="form-group">
+            <label for="username" class="form-label">Username</label>
+            <input 
+              type="text" 
+              id="username" 
+              class="form-control" 
+              placeholder="Enter username" 
+              required
+              autocomplete="username"
+            >
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <input 
+              type="password" 
+              id="password" 
+              class="form-control" 
+              placeholder="Enter password" 
+              required
+              autocomplete="current-password"
+            >
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="login-btn" id="submitBtn">
+            <i class="bi bi-box-arrow-in-right"></i> Sign In
+          </button>
+
+          <!-- Loading Spinner -->
+          <div class="loading" id="loadingSpinner">
+            <div class="spinner-border text-danger" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </form>
+
+        <!-- Info Box -->
+        <div class="info-box">
+          <strong><i class="bi bi-info-circle"></i> Demo Credentials:</strong>
+          <div class="demo-credentials">
+            <div><strong>Username:</strong> admin</div>
+            <div><strong>Password:</strong> password123</div>
+          </div>
+        </div>
+
+        <!-- Back Link -->
+        <div class="back-link">
+          <a href="index.html">
+            <i class="bi bi-arrow-left"></i> Back to Home
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if already logged in
+      if (localStorage.getItem('adminToken')) {
+        window.location.href = 'admin-messages.html';
+      }
+
+      const loginForm = document.getElementById('loginForm');
+      const errorMessage = document.getElementById('errorMessage');
+      const submitBtn = document.getElementById('submitBtn');
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+
+      loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value;
+
+        if (!username || !password) {
+          showError('Please enter both username and password');
+          return;
+        }
+
+        // Show loading state
+        submitBtn.disabled = true;
+        loadingSpinner.style.display = 'block';
+        errorMessage.classList.remove('show');
+
+        try {
+          const response = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            // Save token and redirect
+            localStorage.setItem('adminToken', data.token);
+            window.location.href = 'admin-messages.html';
+          } else {
+            showError(data.message || 'Invalid username or password');
+          }
+        } catch (error) {
+          console.error('Login error:', error);
+          showError('An error occurred. Please try again.');
+        } finally {
+          submitBtn.disabled = false;
+          loadingSpinner.style.display = 'none';
+        }
+      });
+
+      function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.classList.add('show');
+      }
+
+      // Allow Enter key to submit form
+      passwordInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          loginForm.dispatchEvent(new Event('submit'));
+        }
+      });
+    });
+  </script>
+
+</body>
+
+</html>

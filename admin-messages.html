@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Santander | Admin - Messages</title>
+  <meta name="description" content="Admin panel - View and manage customer messages">
+  <meta name="keywords" content="">
+
+  <!-- Favicons -->
+  <link href="" rel="icon">
+  <link href="" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="vendor/aos/aos.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="css/main.css" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: #f5f5f5;
+    }
+    
+    .admin-container {
+      margin-top: 30px;
+      margin-bottom: 30px;
+    }
+    
+    .message-card {
+      background-color: white;
+      border-left: 4px solid #dc3545;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .message-card:hover {
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      transform: translateY(-2px);
+    }
+    
+    .message-card.read {
+      opacity: 0.7;
+      border-left-color: #6c757d;
+    }
+    
+    .message-card.unread {
+      background-color: #fffbf0;
+      border-left-color: #dc3545;
+      font-weight: 500;
+    }
+    
+    .message-from {
+      font-weight: 600;
+      color: #dc3545;
+      margin-bottom: 5px;
+    }
+    
+    .message-subject {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    
+    .message-preview {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 8px;
+      max-height: 40px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .message-date {
+      color: #999;
+      font-size: 12px;
+    }
+    
+    .message-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+    }
+    
+    .message-actions button {
+      padding: 4px 12px;
+      font-size: 12px;
+    }
+    
+    .modal-body {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    
+    .unread-badge {
+      display: inline-block;
+      background-color: #dc3545;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .stat-box {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    
+    .stat-number {
+      font-size: 32px;
+      font-weight: 700;
+      color: #dc3545;
+    }
+    
+    .stat-label {
+      color: #666;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .controls input {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .controls button {
+      white-space: nowrap;
+    }
+
+    .tab-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .tab-button {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .tab-button.active {
+      color: #dc3545;
+      border-bottom-color: #dc3545;
+    }
+
+    .tab-button:hover {
+      color: #dc3545;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .chat-container {
+      display: flex;
+      gap: 20px;
+    }
+
+    .chat-sessions-list {
+      flex: 0 0 300px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-height: 600px;
+    }
+
+    .chat-sessions-header {
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #ddd;
+      font-weight: 600;
+    }
+
+    .chat-sessions-scroll {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .chat-session-item {
+      padding: 12px 15px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .chat-session-item:hover {
+      background-color: #f8f9fa;
+    }
+
+    .chat-session-item.active {
+      background-color: #fff3cd;
+      border-left: 4px solid #dc3545;
+      padding-left: 11px;
+    }
+
+    .chat-session-name {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .chat-session-email {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    .chat-session-badge {
+      display: inline-block;
+      background-color: #dc3545;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .chat-conversation {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #ddd;
+      position: relative;
+    }
+
+    .chat-header h4 {
+      margin: 0 0 5px 0;
+      font-size: 16px;
+    }
+
+    .chat-header p {
+      margin: 0;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      background-color: #f9f9f9;
+      display: flex;
+      flex-direction: column-reverse;
+    }
+
+    .chat-message {
+      margin-bottom: 12px;
+      display: flex;
+    }
+
+    .chat-message.customer {
+      justify-content: flex-end;
+    }
+
+    .chat-message.admin {
+      justify-content: flex-start;
+    }
+
+    .chat-message-bubble {
+      max-width: 70%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      word-wrap: break-word;
+    }
+
+    .chat-message.customer .chat-message-bubble {
+      background-color: #e9ecef;
+      color: #333;
+    }
+
+    .chat-message.admin .chat-message-bubble {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .chat-message-time {
+      font-size: 11px;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+
+    .chat-reply-form {
+      padding: 15px;
+      border-top: 1px solid #ddd;
+      display: flex;
+      gap: 10px;
+    }
+
+    .chat-reply-form textarea {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: none;
+      min-height: 50px;
+      font-family: inherit;
+    }
+
+    .chat-reply-form button {
+      padding: 10px 15px;
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .chat-reply-form button:hover {
+      background-color: #bb2d3b;
+    }
+
+    .no-selection {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body class="index-page">
+
+  <!-- Simple Admin Header -->
+  <header class="header d-flex align-items-center" style="background-color: #dc3545; padding: 15px 0;">
+    <div class="container-fluid">
+      <div class="d-flex align-items-center justify-content-between">
+        <h2 class="text-white mb-0">
+          <i class="bi bi-shield-lock"></i> Santander Admin Panel
+        </h2>
+        <div style="display: flex; gap: 10px;">
+          <a href="index.html" class="btn btn-outline-light btn-sm">Back to Home</a>
+          <button class="btn btn-light btn-sm" onclick="logout()">
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container admin-container">
+      
+      <!-- Page Title -->
+      <h1 class="mb-4">Support Management</h1>
+      
+      <!-- Tab Navigation -->
+      <div class="tab-buttons">
+        <button class="tab-button active" onclick="switchTab('contact-messages')">
+          <i class="bi bi-envelope"></i> Contact Messages
+        </button>
+        <button class="tab-button" onclick="switchTab('archived-messages')">
+          <i class="bi bi-archive"></i> Archived
+        </button>
+        <button class="tab-button" onclick="switchTab('live-chat')">
+          <i class="bi bi-chat-dots"></i> Live Chat <span id="chatBadge" class="unread-badge" style="display: none; margin-left: 8px;"></span>
+        </button>
+        <button class="tab-button" onclick="switchTab('registrations')">
+          <i class="bi bi-person-plus"></i> Registrations <span id="regBadge" class="unread-badge" style="display: none; margin-left: 8px;"></span>
+        </button>
+      </div>
+
+      <!-- Contact Messages Tab -->
+      <div id="contact-messages" class="tab-content active">
+      
+        <!-- Statistics -->
+        <div class="stats">
+          <div class="stat-box">
+            <div class="stat-number" id="totalCount">0</div>
+            <div class="stat-label">Total Messages</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number" id="unreadCount">0</div>
+            <div class="stat-label">Unread Messages</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number" id="readCount">0</div>
+            <div class="stat-label">Read Messages</div>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+          <input 
+            type="text" 
+            id="searchInput" 
+            class="form-control" 
+            placeholder="Search by name, email, or subject..."
+          >
+          <button class="btn btn-danger" onclick="loadMessages()">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+          </button>
+          <button class="btn btn-outline-secondary" onclick="archiveAllMessages()">
+          <i class="bi bi-archive"></i> Archive All
+        </button>
+      </div>
+
+        <!-- Messages List -->
+        <div id="messagesList" class="row">
+          <div class="col-12 text-center text-muted py-5">
+            <i class="bi bi-inbox" style="font-size: 48px;"></i>
+            <p class="mt-3">Loading messages...</p>
+          </div>
+        </div>
+
+      </div> <!-- End contact-messages tab -->
+
+      <!-- Archived Messages Tab -->
+      <div id="archived-messages" class="tab-content">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">Archived Messages</h4>
+            <button class="btn btn-danger btn-sm" onclick="loadMessages()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
+        <div id="archivedMessagesList" class="row">
+          <div class="col-12 text-center text-muted py-5">
+            <i class="bi bi-inbox" style="font-size: 48px;"></i>
+            <p class="mt-3">No archived messages</p>
+          </div>
+        </div>
+      </div> <!-- End archived-messages tab -->
+
+      <!-- Live Chat Tab -->
+      <div id="live-chat" class="tab-content">
+        <div class="chat-container">
+          <!-- Chat Sessions List -->
+          <div class="chat-sessions-list">
+            <div class="chat-sessions-header">Active Chats</div>
+            <div class="chat-sessions-scroll" id="chatSessionsList">
+              <div style="padding: 20px; text-align: center; color: #999;">
+                <i class="bi bi-chat-dots" style="font-size: 32px; display: block; margin-bottom: 10px;"></i>
+                No active chats
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Conversation -->
+          <div class="chat-conversation">
+            <div class="no-selection" id="noChatSelection">
+              <div style="text-align: center;">
+                <i class="bi bi-chat-left-dots" style="font-size: 48px; display: block; margin-bottom: 10px; color: #ddd;"></i>
+                Select a chat to start replying
+              </div>
+            </div>
+
+            <!-- Chat View (hidden by default) -->
+            <div id="chatView" style="display: none; display: flex; flex-direction: column; height: 100%;">
+              <div class="chat-header">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <div>
+                    <h4 id="chatCustomerName" style="margin: 0 0 5px 0;">Customer Name</h4>
+                    <p id="chatCustomerEmail" style="margin: 0; font-size: 13px; color: #666;">customer@email.com</p>
+                  </div>
+                  <button class="btn btn-sm btn-outline-danger" onclick="closeChatSession()">
+                    <i class="bi bi-x-circle"></i> Close Chat
+                  </button>
+                </div>
+              </div>
+              <div class="chat-messages" id="chatMessagesContainer"></div>
+              <div class="chat-reply-form">
+                <textarea id="adminReplyText" placeholder="Type your reply..."></textarea>
+                <button onclick="sendAdminReply()"><i class="bi bi-send"></i> Send</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div> <!-- End live-chat tab -->
+
+      <!-- Registrations Tab -->
+      <div id="registrations" class="tab-content">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">Account Applications</h4>
+            <button class="btn btn-danger btn-sm" onclick="loadRegistrations()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
+        <div class="table-responsive bg-white rounded shadow-sm">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Account Type</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="registrationsList"></tbody>
+            </table>
+        </div>
+      </div> <!-- End registrations tab -->
+
+    </div>
+  </main>
+
+  <!-- Message Detail Modal -->
+  <div class="modal fade" id="messageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header" style="background-color: #f8f9fa; border-bottom: 2px solid #dc3545;">
+          <h5 class="modal-title">Message Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label text-muted">From</label>
+            <p class="fs-6"><strong id="modalName"></strong></p>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-muted">Email</label>
+            <p class="fs-6"><a id="modalEmail" href=""></a></p>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-muted">Subject</label>
+            <p class="fs-6"><strong id="modalSubject"></strong></p>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-muted">Message</label>
+            <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; min-height: 100px;">
+              <p id="modalMessage"></p>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-muted">Received</label>
+            <p class="fs-6" id="modalDate"></p>
+          </div>
+
+          <!-- Replies Section -->
+          <div class="mb-4">
+            <label class="form-label text-muted"><strong>Replies</strong></label>
+            <div id="repliesContainer" style="max-height: 250px; overflow-y: auto;">
+              <p class="text-muted text-center py-3">No replies yet</p>
+            </div>
+          </div>
+
+          <!-- Reply Form -->
+          <div class="mb-3">
+            <label for="replyText" class="form-label"><strong>Send Reply</strong></label>
+            <textarea 
+              id="replyText" 
+              class="form-control" 
+              rows="4" 
+              placeholder="Type your reply message here..."
+              style="resize: vertical;"
+            ></textarea>
+            <small class="text-muted">This will be sent to the customer via email</small>
+            <div id="replyError" style="color: #dc3545; font-weight: bold; margin-top: 8px; display: none;"></div>
+            <div id="replySuccess" style="color: #28a745; font-weight: bold; margin-top: 8px; display: none;">Reply sent successfully!</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-danger" id="markReadBtn" onclick="toggleMessageRead()">
+            Mark as Unread
+          </button>
+          <button type="button" class="btn btn-primary" id="sendReplyBtn" onclick="sendReply()">
+            <i class="bi bi-send"></i> Send Reply
+          </button>
+          <button type="button" class="btn btn-secondary" id="deleteBtn" onclick="deleteMessage()">
+            <i class="bi bi-archive"></i> Archive
+          </button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Registration Details Modal -->
+  <div class="modal fade" id="registrationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Application Details</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted small">Full Name</label>
+                    <div class="fw-bold" id="regName"></div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted small">Email</label>
+                    <div class="fw-bold" id="regEmail"></div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted small">Phone</label>
+                    <div class="fw-bold" id="regPhone"></div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted small">Date of Birth</label>
+                    <div class="fw-bold" id="regDob"></div>
+                </div>
+                <div class="col-12 mb-3">
+                    <label class="text-muted small">Address</label>
+                    <div class="fw-bold" id="regAddress"></div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted small">ID Number</label>
+                    <div class="fw-bold" id="regIdNumber"></div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="text-muted small">Account Types</label>
+                    <div class="fw-bold text-danger" id="regAccountTypes"></div>
+                </div>
+                <div class="col-12 mb-3">
+                    <label class="text-muted small">ID Document</label>
+                    <div id="regDocumentLink"></div>
+                </div>
+                <div class="col-12 mt-3" id="regGeneratedAccountsContainer" style="display: none;">
+                    <label class="text-muted small">Generated Account Details</label>
+                    <div id="regGeneratedAccounts" class="bg-light p-3 rounded border"></div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer" id="regModalFooter"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="text-center text-dark mt-5 py-4" style="background-color: #f8f9fa; border-top: 1px solid #dee2e6;">
+    <div class="container">
+      <p class="text-muted">Admin Panel v1.0 - Santander UK</p>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    let allMessages = [];
+    let allRegistrations = [];
+    let currentMessageId = null;
+    let adminToken = null;
+
+    // Check authentication on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      adminToken = localStorage.getItem('adminToken');
+      
+      if (!adminToken) {
+        // Redirect to login if not authenticated
+        window.location.href = 'admin-login.html';
+        return;
+      }
+
+      // Verify token is still valid
+      verifyToken();
+      
+      const messageModal = document.getElementById('messageModal');
+      const modal = new bootstrap.Modal(messageModal);
+      
+      loadMessages();
+      
+      // Search functionality
+      document.getElementById('searchInput').addEventListener('keyup', filterMessages);
+
+      loadMessages();
+      
+      // Load chat sessions
+      loadChatSessions();
+
+      // Enter key support for admin reply
+      document.getElementById('adminReplyText').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendAdminReply();
+        }
+      });
+
+      // Set up polling for new chat sessions and messages
+      setInterval(() => {
+        if (document.getElementById('live-chat').classList.contains('active')) {
+          loadChatSessions();
+          if (currentChatSessionId) {
+            loadChatMessages(currentChatSessionId);
+          }
+        }
+      }, 3000); // Poll every 3 seconds
+    });
+
+    // Tab switching functionality
+    function switchTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      // Show selected tab
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
+
+      // Load data for the selected tab
+      if (tabName === 'live-chat') {
+        loadChatSessions();
+      } else if (tabName === 'contact-messages' || tabName === 'archived-messages') {
+        loadMessages();
+      } else if (tabName === 'registrations') {
+        loadRegistrations();
+      }
+    }
+
+    // Live Chat Functions
+    let currentChatSessionId = null;
+
+    async function loadChatSessions() {
+      try {
+        const response = await fetch('/api/admin/chat/sessions', {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('adminToken');
+            window.location.href = 'admin-login.html';
+          }
+          throw new Error('Failed to load chat sessions');
+        }
+
+        const data = await response.json();
+        displayChatSessions(data.sessions || []);
+      } catch (error) {
+        console.error('Error loading chat sessions:', error);
+      }
+    }
+
+    function displayChatSessions(sessions) {
+      const sessionsList = document.getElementById('chatSessionsList');
+      const chatBadge = document.getElementById('chatBadge');
+
+      // Update badge
+      const totalUnread = sessions.reduce((sum, session) => sum + (session.unread_count || 0), 0);
+      if (totalUnread > 0) {
+        chatBadge.textContent = totalUnread;
+        chatBadge.style.display = 'inline-block';
+      } else {
+        chatBadge.style.display = 'none';
+      }
+
+      if (sessions.length === 0) {
+        sessionsList.innerHTML = `
+          <div style="padding: 20px; text-align: center; color: #999;">
+            <i class="bi bi-chat-dots" style="font-size: 32px; display: block; margin-bottom: 10px;"></i>
+            No active chats
+          </div>
+        `;
+        return;
+      }
+
+      sessionsList.innerHTML = sessions.map(session => {
+        const isActive = session.session_id === currentChatSessionId;
+        const unreadBadge = session.unread_count > 0 ? `<span class="chat-session-badge">${session.unread_count}</span>` : '';
+        
+        return `
+          <div class="chat-session-item ${isActive ? 'active' : ''}" onclick="selectChatSession('${session.session_id}')">
+            <div class="chat-session-name">${escapeHtml(session.customer_name || 'Anonymous')}</div>
+            <div class="chat-session-email">${escapeHtml(session.customer_email || 'No email')}</div>
+            ${unreadBadge}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectChatSession(sessionId) {
+      currentChatSessionId = sessionId;
+      loadChatMessages(sessionId);
+      displayChatSessions(document.querySelectorAll('.chat-session-item').forEach(item => item.classList.remove('active')));
+      event.target.closest('.chat-session-item').classList.add('active');
+    }
+
+    async function loadChatMessages(sessionId) {
+      try {
+        const response = await fetch(`/api/admin/chat/sessions/${sessionId}/messages`, {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('adminToken');
+            window.location.href = 'admin-login.html';
+          }
+          throw new Error('Failed to load chat messages');
+        }
+
+        const data = await response.json();
+        displayChatMessages(data.messages || []);
+      } catch (error) {
+        console.error('Error loading chat messages:', error);
+      }
+    }
+
+    function displayChatMessages(messages) {
+      const chatView = document.getElementById('chatView');
+      const noSelection = document.getElementById('noChatSelection');
+      const messagesContainer = document.getElementById('chatMessagesContainer');
+
+      if (messages.length === 0) {
+        chatView.style.display = 'none';
+        noSelection.style.display = 'flex';
+        return;
+      }
+
+      // Show chat view
+      chatView.style.display = 'flex';
+      noSelection.style.display = 'none';
+
+      // Get session info from messages (find customer info)
+      const customerMessage = messages.find(msg => msg.sender_type === 'customer');
+      if (customerMessage) {
+        document.getElementById('chatCustomerName').textContent = customerMessage.sender_name || 'Customer';
+        // Note: customer_email might not be in message object, we get it from session
+      }
+
+      // Display messages
+      messagesContainer.innerHTML = messages.map(msg => {
+        const isAdmin = msg.sender_type === 'admin';
+        const time = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        return `
+          <div class="chat-message ${msg.sender_type}">
+            <div class="chat-message-bubble">
+              <div style="font-size: 12px; margin-bottom: 4px; opacity: 0.8;">
+                <strong>${escapeHtml(msg.sender_name)}</strong>
+              </div>
+              <div>${escapeHtml(msg.message).replace(/\n/g, '<br>')}</div>
+              <div class="chat-message-time">${time}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Scroll to bottom
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    async function sendAdminReply() {
+      if (!currentChatSessionId) return;
+      
+      const replyText = document.getElementById('adminReplyText').value.trim();
+      if (!replyText) return;
+      
+      try {
+        const response = await fetch('/api/chat/reply', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            session_id: currentChatSessionId,
+            message: replyText
+          })
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('adminToken');
+            window.location.href = 'admin-login.html';
+          }
+          throw new Error('Failed to send reply');
+        }
+
+        const data = await response.json();
+        if (data.success) {
+          document.getElementById('adminReplyText').value = '';
+          loadChatMessages(currentChatSessionId);
+          loadChatSessions(); // Refresh session list
+        }
+      } catch (error) {
+        console.error('Error sending reply:', error);
+        alert('Error sending reply. Please try again.');
+      }
+    }
+
+    async function closeChatSession() {
+      if (!currentChatSessionId) return;
+      
+      if (!confirm('Are you sure you want to close this chat session?')) return;
+      
+      try {
+        const response = await fetch(`/api/chat/sessions/${currentChatSessionId}/close`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('adminToken');
+            window.location.href = 'admin-login.html';
+          }
+          throw new Error('Failed to close chat session');
+        }
+
+        const data = await response.json();
+        if (data.success) {
+          currentChatSessionId = null;
+          document.getElementById('chatView').style.display = 'none';
+          document.getElementById('noChatSelection').style.display = 'flex';
+          loadChatSessions(); // Refresh session list
+        }
+      } catch (error) {
+        console.error('Error closing chat session:', error);
+        alert('Error closing chat session. Please try again.');
+      }
+    }
+
+    // Verify token is valid
+    async function verifyToken() {
+      try {
+        const response = await fetch('/api/admin/verify', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          // Token is invalid, redirect to login
+          localStorage.removeItem('adminToken');
+          window.location.href = 'admin-login.html';
+        }
+      } catch (error) {
+        console.error('Token verification failed:', error);
+        localStorage.removeItem('adminToken');
+        window.location.href = 'admin-login.html';
+      }
+    }
+
+    // Load all messages from server
+    async function loadMessages() {
+      try {
+        const response = await fetch('/api/messages', {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('adminToken');
+            window.location.href = 'admin-login.html';
+          }
+          throw new Error('Failed to load messages');
+        }
+
+        const data = await response.json();
+        
+        if (data.success) {
+          allMessages = data.messages || [];
+          
+          const activeMessages = allMessages.filter(m => !m.archived);
+          const archivedMessages = allMessages.filter(m => m.archived);
+          displayMessages(activeMessages, 'messagesList');
+          displayMessages(archivedMessages, 'archivedMessagesList');
+          updateStats();
+        } else {
+          showError('Failed to load messages');
+        }
+      } catch (error) {
+        console.error('Error loading messages:', error);
+        showError('Error loading messages');
+      }
+    }
+
+    // Display messages in the list
+    function displayMessages(messages, containerId = 'messagesList') {
+      const messagesList = document.getElementById(containerId);
+      if (!messagesList) return;
+      
+      if (messages.length === 0) {
+        messagesList.innerHTML = `
+          <div class="col-12 text-center text-muted py-5">
+            <i class="bi bi-inbox" style="font-size: 48px;"></i>
+            <p class="mt-3">No messages found</p>
+          </div>
+        `;
+        return;
+      }
+
+      messagesList.innerHTML = messages.map(msg => {
+        const date = new Date(msg.created_at).toLocaleString();
+        const preview = msg.message.substring(0, 100) + (msg.message.length > 100 ? '...' : '');
+        const unreadClass = msg.read ? 'read' : 'unread';
+        const unreadBadge = msg.read ? '' : '<span class="unread-badge">NEW</span>';
+        const archivedBadge = msg.archived ? '<span class="badge bg-secondary ms-2" style="font-size: 10px;">Archived</span>' : '';
+        
+        return `
+          <div class="col-12">
+            <div class="message-card ${unreadClass}" onclick="openMessage(${msg.id})">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <div class="message-from">${escapeHtml(msg.name)} ${unreadBadge} ${archivedBadge}</div>
+                  <div class="message-subject">${escapeHtml(msg.subject)}</div>
+                </div>
+                <div class="message-date">${date}</div>
+              </div>
+              <div class="message-preview">${escapeHtml(preview)}</div>
+              <div class="message-actions">
+                <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); toggleMessageRead(${msg.id})">
+                  <i class="bi bi-envelope${msg.read ? '-open' : ''}"></i> ${msg.read ? 'Mark Unread' : 'Mark Read'}
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); deleteMessage(${msg.id})" ${msg.archived ? 'disabled' : ''}>
+                  <i class="bi bi-archive"></i> ${msg.archived ? 'Archived' : 'Archive'}
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Open message in modal
+    function openMessage(id) {
+      const msg = allMessages.find(m => m.id === id);
+      if (!msg) return;
+
+      currentMessageId = id;
+      
+      document.getElementById('modalName').textContent = msg.name;
+      document.getElementById('modalEmail').textContent = msg.email;
+      document.getElementById('modalEmail').href = `mailto:${msg.email}`;
+      document.getElementById('modalSubject').textContent = msg.subject;
+      document.getElementById('modalMessage').textContent = msg.message;
+      document.getElementById('modalDate').textContent = new Date(msg.created_at).toLocaleString();
+      
+      // Reset reply form
+      document.getElementById('replyText').value = '';
+      document.getElementById('replyError').style.display = 'none';
+      document.getElementById('replySuccess').style.display = 'none';
+      
+      const markReadBtn = document.getElementById('markReadBtn');
+      markReadBtn.textContent = msg.read ? 'Mark as Unread' : 'Mark as Read';
+      
+      const deleteBtn = document.getElementById('deleteBtn');
+      deleteBtn.innerHTML = msg.archived ? '<i class="bi bi-archive"></i> Archived' : '<i class="bi bi-archive"></i> Archive';
+      deleteBtn.disabled = !!msg.archived;
+
+      // Mark as read when opened
+      if (!msg.read) {
+        markMessageAsRead(id);
+      }
+      
+      // Load replies
+      loadReplies(id);
+      
+      const modal = bootstrap.Modal.getInstance(document.getElementById('messageModal')) || new bootstrap.Modal(document.getElementById('messageModal'));
+      modal.show();
+    }
+
+    // Load replies for a message
+    async function loadReplies(messageId) {
+      try {
+        const response = await fetch(`/api/messages/${messageId}/replies`, {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('adminToken');
+            window.location.href = 'admin-login.html';
+          }
+          throw new Error('Failed to load replies');
+        }
+
+        const data = await response.json();
+        displayReplies(data.replies || []);
+      } catch (error) {
+        console.error('Error loading replies:', error);
+      }
+    }
+
+    // Display replies in the container
+    function displayReplies(replies) {
+      const repliesContainer = document.getElementById('repliesContainer');
+      
+      if (replies.length === 0) {
+        repliesContainer.innerHTML = '<p class="text-muted text-center py-3">No replies yet</p>';
+        return;
+      }
+
+      repliesContainer.innerHTML = replies.map(reply => {
+        const date = new Date(reply.created_at).toLocaleString();
+        return `
+          <div style="background-color: #f0f0f0; padding: 12px; border-radius: 4px; margin-bottom: 10px; border-left: 3px solid #28a745;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <strong style="color: #28a745;">${escapeHtml(reply.replied_by)}</strong>
+              <small style="color: #999;">${date}</small>
+            </div>
+            <p style="margin: 0; color: #333;">${escapeHtml(reply.reply_text).replace(/\n/g, '<br>')}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Send reply to message
+    async function sendReply() {
+      if (!currentMessageId) return;
+      
+      const replyText = document.getElementById('replyText').value.trim();
+      const errorDiv = document.getElementById('replyError');
+      const successDiv = document.getElementById('replySuccess');
+      const sendBtn = document.getElementById('sendReplyBtn');
+      
+      // Reset messages
+      errorDiv.style.display = 'none';
+      successDiv.style.display = 'none';
+      
+      if (!replyText) {
+        errorDiv.textContent = 'Please enter a reply message';
+        errorDiv.style.display = 'block';
+        return;
+      }
+      
+      sendBtn.disabled = true;
+      
+      try {
+        const response = await fetch(`/api/messages/${currentMessageId}/reply`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ reply_text: replyText })
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('adminToken');
+            window.location.href = 'admin-login.html';
+          }
+          throw new Error('Failed to send reply');
+        }
+
+        const data = await response.json();
+        
+        if (data.success) {
+          // Clear form and show success
+          document.getElementById('replyText').value = '';
+          successDiv.style.display = 'block';
+          
+          // Reload replies
+          loadReplies(currentMessageId);
+          
+          // Hide success message after 3 seconds
+          setTimeout(() => {
+            successDiv.style.display = 'none';
+          }, 3000);
+        } else {
+          errorDiv.textContent = data.message || 'Error sending reply';
+          errorDiv.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Error sending reply:', error);
+        errorDiv.textContent = 'Error sending reply. Please try again.';
+        errorDiv.style.display = 'block';
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    // Mark message as read/unread
+    async function markMessageAsRead(id) {
+      try {
+        const response = await fetch(`/api/messages/${id}/read`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('adminToken');
+            window.location.href = 'admin-login.html';
+          }
+          throw new Error('Failed to update message');
+        }
+
+        const data = await response.json();
+        
+        if (data.success) {
+          const msg = allMessages.find(m => m.id === id);
+          if (msg) {
+            msg.read = !msg.read;
+          }
+          displayMessages(allMessages);
+          updateStats();
+        }
+      } catch (error) {
+        console.error('Error updating message:', error);
+      }
+    }
+
+    function toggleMessageRead() {
+      if (currentMessageId) {
+        markMessageAsRead(currentMessageId);
+      }
+    }
+
+    // Delete message
+    async function deleteMessage(id = null) {
+      const messageId = id || currentMessageId;
+      if (!messageId) return;
+      
+      if (!confirm('Are you sure you want to archive this message?')) return;
+      
+      try {
+        const response = await fetch(`/api/messages/${messageId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('adminToken');
+            window.location.href = 'admin-login.html';
+          }
+          throw new Error('Failed to delete message');
+        }
+
+        const data = await response.json();
+        
+        if (data.success) {
+          // Update local state to archived instead of removing
+          const msg = allMessages.find(m => m.id === messageId);
+          if (msg) msg.archived = true;
+          
+          const activeMessages = allMessages.filter(m => !m.archived);
+          const archivedMessages = allMessages.filter(m => m.archived);
+          displayMessages(activeMessages, 'messagesList');
+          displayMessages(archivedMessages, 'archivedMessagesList');
+          updateStats();
+          if (!id) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('messageModal'));
+            if (modal) modal.hide();
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting message:', error);
+      }
+    }
+
+    // Archive all messages
+    function archiveAllMessages() {
+      if (!confirm('Are you sure you want to archive ALL messages?')) return;
+      
+      allMessages.forEach(msg => {
+        fetch(`/api/messages/${msg.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+      });
+      
+      // Mark all as archived locally
+      allMessages.forEach(msg => msg.archived = true);
+      
+      // Re-render
+      displayMessages([], 'messagesList');
+      displayMessages(allMessages, 'archivedMessagesList');
+      updateStats();
+    }
+
+    // Filter messages by search
+    function filterMessages() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allMessages.filter(msg => 
+        msg.name.toLowerCase().includes(searchTerm) ||
+        msg.email.toLowerCase().includes(searchTerm) ||
+        msg.subject.toLowerCase().includes(searchTerm) ||
+        msg.message.toLowerCase().includes(searchTerm)
+      );
+      
+      const activeFiltered = filtered.filter(m => !m.archived);
+      const archivedFiltered = filtered.filter(m => m.archived);
+      
+      displayMessages(activeFiltered, 'messagesList');
+      
+      // Only update archived list if we are filtering, otherwise loadMessages handles it
+      // But since filterMessages is called on keyup, we should update both
+      displayMessages(archivedFiltered, 'archivedMessagesList');
+    }
+
+    // Update statistics
+    function updateStats() {
+      const total = allMessages.length;
+      const unread = allMessages.filter(m => !m.read).length;
+      const read = total - unread;
+      
+      document.getElementById('totalCount').textContent = total;
+      document.getElementById('unreadCount').textContent = unread;
+      document.getElementById('readCount').textContent = read;
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Show error message
+    function showError(message) {
+      alert(message);
+    }
+
+    // Registrations Functions
+    async function loadRegistrations() {
+      try {
+        const response = await fetch('/api/admin/registrations', {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('adminToken');
+            window.location.href = 'admin-login.html';
+          }
+          throw new Error('Failed to load registrations');
+        }
+
+        const data = await response.json();
+        
+        if (data.success) {
+          allRegistrations = data.registrations || [];
+          displayRegistrations(allRegistrations);
+          
+          // Update badge
+          const pendingCount = allRegistrations.filter(r => r.status === 'pending').length;
+          const regBadge = document.getElementById('regBadge');
+          if (pendingCount > 0) {
+            regBadge.textContent = pendingCount;
+            regBadge.style.display = 'inline-block';
+          } else {
+            regBadge.style.display = 'none';
+          }
+        }
+      } catch (error) {
+        console.error('Error loading registrations:', error);
+      }
+    }
+
+    function displayRegistrations(registrations) {
+      const list = document.getElementById('registrationsList');
+      
+      if (registrations.length === 0) {
+        list.innerHTML = '<tr><td colspan="6" class="text-center py-4">No applications found</td></tr>';
+        return;
+      }
+
+      list.innerHTML = registrations.map(reg => {
+        const date = new Date(reg.created_at).toLocaleDateString();
+        let statusClass = 'bg-secondary';
+        if (reg.status === 'approved') statusClass = 'bg-success';
+        if (reg.status === 'rejected') statusClass = 'bg-danger';
+        if (reg.status === 'pending') statusClass = 'bg-warning text-dark';
+        if (reg.status === 'suspended') statusClass = 'bg-warning text-dark';
+        if (reg.status === 'blocked') statusClass = 'bg-dark';
+
+        return `
+          <tr style="cursor: pointer;" onclick="openRegistration(${reg.id})">
+            <td>${escapeHtml(reg.firstname)} ${escapeHtml(reg.surname)}</td>
+            <td>${escapeHtml(reg.email)}</td>
+            <td>${escapeHtml(reg.account_types || 'N/A')}</td>
+            <td><span class="badge ${statusClass}">${reg.status.toUpperCase()}</span></td>
+            <td>${date}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); openRegistration(${reg.id})">
+                View
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openRegistration(id) {
+      const reg = allRegistrations.find(r => r.id === id);
+      if (!reg) return;
+
+      document.getElementById('regName').textContent = `${reg.firstname} ${reg.middlename || ''} ${reg.surname}`;
+      document.getElementById('regEmail').textContent = reg.email;
+      document.getElementById('regPhone').textContent = reg.phone || 'N/A';
+      document.getElementById('regDob').textContent = reg.dob ? new Date(reg.dob).toLocaleDateString() : 'N/A';
+      document.getElementById('regAddress').textContent = reg.address || 'N/A';
+      document.getElementById('regIdNumber').textContent = reg.id_number || 'N/A';
+      document.getElementById('regAccountTypes').textContent = reg.account_types || 'N/A';
+      
+      const docLink = document.getElementById('regDocumentLink');
+      if (reg.id_document_path) {
+        docLink.innerHTML = `<a href="${reg.id_document_path}" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="bi bi-file-earmark-text"></i> View Document</a>`;
+      } else {
+        docLink.textContent = 'No document uploaded';
+      }
+
+      // Display generated accounts if they exist
+      const accountsContainer = document.getElementById('regGeneratedAccountsContainer');
+      const accountsDiv = document.getElementById('regGeneratedAccounts');
+      if (reg.status === 'approved' && reg.accounts && reg.accounts.length > 0) {
+          accountsDiv.innerHTML = reg.accounts.map(acc => `
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="fw-bold">${escapeHtml(acc.account_type)} Account:</span>
+                  <span class="font-monospace bg-white px-2 py-1 rounded">${escapeHtml(acc.account_number)}</span>
+              </div>
+          `).join('');
+          accountsContainer.style.display = 'block';
+      } else {
+          accountsContainer.style.display = 'none';
+      }
+
+      const footer = document.getElementById('regModalFooter');
+      if (reg.status === 'pending') {
+        footer.innerHTML = `
+          <button class="btn btn-success" onclick="updateRegistrationStatus(${reg.id}, 'approved')">Approve</button>
+          <button class="btn btn-danger" onclick="updateRegistrationStatus(${reg.id}, 'rejected')">Reject</button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        `;
+      } else {
+        let actionButtons = '';
+        if (reg.status === 'approved') {
+            actionButtons = `
+                <button class="btn btn-warning" onclick="updateRegistrationStatus(${reg.id}, 'suspended')">Suspend</button>
+                <button class="btn btn-dark" onclick="updateRegistrationStatus(${reg.id}, 'blocked')">Block</button>
+            `;
+        } else if (reg.status === 'suspended') {
+            actionButtons = `
+                <button class="btn btn-success" onclick="updateRegistrationStatus(${reg.id}, 'approved')">Re-activate</button>
+                <button class="btn btn-dark" onclick="updateRegistrationStatus(${reg.id}, 'blocked')">Block</button>
+            `;
+        } else if (reg.status === 'blocked') {
+            actionButtons = `
+                <button class="btn btn-success" onclick="updateRegistrationStatus(${reg.id}, 'approved')">Unblock</button>
+            `;
+        }
+        footer.innerHTML = `${actionButtons}<button class="btn btn-secondary ms-2" data-bs-dismiss="modal">Close</button>`;
+      }
+
+      const modal = new bootstrap.Modal(document.getElementById('registrationModal'));
+      modal.show();
+    }
+
+    async function updateRegistrationStatus(id, status) {
+      if (!confirm(`Are you sure you want to ${status} this application?`)) return;
+
+      try {
+        const response = await fetch(`/api/admin/registrations/${id}/status`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ status })
+        });
+
+        if (!response.ok) throw new Error('Failed to update status');
+
+        const data = await response.json();
+        if (data.success) {
+          // Close modal
+          const modalEl = document.getElementById('registrationModal');
+          const modal = bootstrap.Modal.getInstance(modalEl);
+          if (modal) modal.hide();
+          
+          // Refresh list
+          loadRegistrations();
+        }
+      } catch (error) {
+        console.error('Error updating status:', error);
+        alert('Error updating status');
+      }
+    }
+
+    // Logout function
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('adminToken');
+        window.location.href = 'admin-login.html';
+      }
+    }
+  </script>
+
+</body>
+
+</html>

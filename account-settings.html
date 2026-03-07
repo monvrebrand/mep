@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Santander | Account Settings</title>
+  <meta name="description" content="Update your personal details and security settings.">
+  <meta name="keywords" content="">
+
+  <!-- Favicons -->
+  <link href="" rel="icon">
+  <link href="" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="vendor/aos/aos.css" rel="stylesheet">
+  <link href="vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="css/main.css" rel="stylesheet">
+</head>
+
+<body class="index-page">
+
+  <!-- ========== HEADER (exactly as on dashboard) ========== -->
+  <header id="header" class="header d-flex align-items-center" style="background-color: red;">
+    <div class="container-fluid container-xl d-flex align-items-center justify-content-between">
+      <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="personal.html" class="active text-white">Personal</a></li>
+          <li><a href="private.html" class="text-white">Private</a></li>
+          <li><a href="business.html" class="text-white">Business</a></li>
+          <li><a href="corporate.html" class="text-white">Corporate</a></li>
+        </ul>
+      </nav>
+      <div class="ms-auto">
+        <a class="btn-getstarted" href="inside.html">Dashboard</a>
+        <a class="btn-getstarted" href="customer-support.html">Contact</a>
+        <button class="btn-getstarted bg-white border-0" onclick="logout()" style="color: red;">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <header id="header" class="header align-items-center">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center">
+      <a href="inside.html" class="logo d-flex align-items-center me-auto">
+        <img src="img/logo.png" alt="Santander logo" class="img-fluid">
+        <h4 class="pt-3 fw-bold" style="color: red;">Santander</h4>
+      </a>
+      <nav id="navmenu" class="navmenu">
+        <!-- empty on purpose – matches homepage structure -->
+      </nav>
+    </div>
+  </header>
+  <!-- ========== END HEADER ========== -->
+
+  <main class="main">
+    <div class="container mt-5" data-aos="fade-up">
+      <!-- Back link -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <a href="inside.html" class="text-decoration-none" style="color: red;">
+            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+          </a>
+        </div>
+      </div>
+
+      <!-- Settings Card -->
+      <div class="row justify-content-center">
+        <div class="col-lg-6">
+          <div class="card shadow border-0 rounded-4">
+            <div class="card-body p-5">
+              <h3 class="card-title fw-bold mb-4" style="color: red;">Account Settings</h3>
+
+              <form id="settingsForm">
+                <!-- Name (read‑only) -->
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Name</label>
+                  <p id="nameDisplay" class="form-control-plaintext bg-light p-2 rounded"></p>
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3">
+                  <label for="email" class="form-label fw-semibold">Email address</label>
+                  <input type="email" class="form-control" id="email" placeholder="your@email.com" required>
+                </div>
+
+                <!-- Phone -->
+                <div class="mb-3">
+                  <label for="phone" class="form-label fw-semibold">Phone number</label>
+                  <input type="text" class="form-control" id="phone" placeholder="+44 1234 567890">
+                </div>
+
+                <!-- Notifications -->
+                <div class="mb-4 form-check">
+                  <input type="checkbox" class="form-check-input" id="emailNotifications">
+                  <label class="form-check-label" for="emailNotifications">Receive email notifications</label>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Password change section -->
+                <h6 class="fw-bold mb-3">Change password</h6>
+                <div class="mb-3">
+                  <label for="oldPassword" class="form-label fw-semibold">Current password</label>
+                  <input type="password" class="form-control" id="oldPassword" placeholder="Required to change password">
+                </div>
+                <div class="mb-4">
+                  <label for="password" class="form-label fw-semibold">New password</label>
+                  <input type="password" class="form-control" id="password" placeholder="Leave blank to keep current">
+                </div>
+
+                <!-- Submit button -->
+                <button type="submit" class="btn btn-danger rounded-pill w-100 py-2 fw-bold">Save Changes</button>
+              </form>
+
+              <!-- Result message container -->
+              <div id="settingsResult" class="mt-3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info boxes (exactly as on dashboard) -->
+    <hr class="my-5" />
+    <div class="container mt-5">
+      <div class="row">
+        <div class="col-6">
+          <div class="p-3 border bg-light">
+            <h5>Protecting your money</h5>
+            <p>Your money is protected by the Financial Services Compensation Scheme (FSCS) up to £85,000.</p>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="p-3 border bg-light">
+            <h5>Stop, Challenge, Protect</h5>
+            <p>Stay safe from fraud – we'll never ask for your full PIN or password. If something feels wrong, stop and challenge it.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========== FULL FOOTER (same as other Santander pages) ========== -->
+  <footer class="text-center text-dark">
+    <div class="container">
+      <section class="mt-5">
+        <div class="row text-center d-flex justify-content-center pt-5">
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">About Santander UK</a></h6></div>
+          <div class="col-md-1"><h6><a href="#!" class="text-dark">Branch locator</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Branch appointments</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Support</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Accessibility</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Site map</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Privacy policy</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Cookie policy</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Fraud and security</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Financial results</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Santander Careers</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Service status</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Welsh language policy</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Modern slavery statement</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Santander Universities</a></h6></div>
+          <div class="col-md-2"><h6><a href="#!" class="text-dark">Santander websites</a></h6></div>
+        </div>
+      </section>
+
+      <section class="mb-5">
+        <div class="row d-flex justify-content-start">
+          <div class="col-lg-12">
+            <p class="small">
+              Santander UK plc. Registered Office: 2 Triton Square, Regent's Place, London, NW1 3AN, United Kingdom. Registered Number 2294747. Registered in England and Wales. www.santander.co.uk. Authorised by the Prudential Regulation Authority and regulated by the Financial Conduct Authority and the Prudential Regulation Authority. Our Financial Services Register number is 106054. You can check this on the Financial Services Register by visiting the FCA’s website www.fca.org.uk/register. Santander and the flame logo are registered trademarks.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Social icons (Bootstrap Icons) -->
+      <section class="text-center mb-5">
+        <a href="" class="text-dark me-4"><i class="bi bi-facebook"></i></a>
+        <a href="" class="text-dark me-4"><i class="bi bi-twitter"></i></a>
+        <a href="" class="text-dark me-4"><i class="bi bi-google"></i></a>
+        <a href="" class="text-dark me-4"><i class="bi bi-instagram"></i></a>
+        <a href="" class="text-dark me-4"><i class="bi bi-linkedin"></i></a>
+        <a href="" class="text-dark me-4"><i class="bi bi-github"></i></a>
+      </section>
+    </div>
+  </footer>
+  <!-- ========== END FOOTER ========== -->
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="vendor/php-email-form/validate.js"></script>
+  <script src="vendor/aos/aos.js"></script>
+  <script src="vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
+  <script src="vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="vendor/swiper/swiper-bundle.min.js"></script>
+
+  <!-- Main JS File -->
+  <script src="js/main.js"></script>
+
+  <!-- Page-specific JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Initialise AOS (if not already in main.js)
+      if (typeof AOS !== 'undefined') {
+        AOS.init();
+      }
+
+      const userStr = localStorage.getItem('santander_user');
+      if (!userStr) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const user = JSON.parse(userStr);
+
+      // Fetch profile data from API
+      try {
+        const res = await fetch(`/api/user/${user.username}/profile`);
+        const data = await res.json();
+        if (data.success && data.profile) {
+          const p = data.profile;
+          // Display full name
+          document.getElementById('nameDisplay').textContent = `${p.firstname} ${p.surname}`;
+          // Populate form fields from database
+          document.getElementById('email').value = p.email || '';
+          document.getElementById('phone').value = p.phone || '';
+          document.getElementById('emailNotifications').checked = p.email_notifications || false;
+        } else {
+          alert('Could not load profile. Please try again.');
+        }
+      } catch (err) {
+        console.error('Profile load error', err);
+        alert('Error loading profile data. Please refresh the page.');
+      }
+
+      // Handle form submission
+      document.getElementById('settingsForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const oldPassword = document.getElementById('oldPassword').value;
+        const password = document.getElementById('password').value;
+        const emailNotifications = document.getElementById('emailNotifications').checked;
+        const out = document.getElementById('settingsResult');
+        out.innerHTML = '';
+
+        try {
+          const resp = await fetch(`/api/user/${user.username}/profile`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email,
+              phone,
+              oldPassword,
+              newPassword: password,
+              emailNotifications
+            })
+          });
+          const d = await resp.json();
+          if (d.success) {
+            out.innerHTML = '<div class="alert alert-success">Settings saved successfully.</div>';
+            document.getElementById('password').value = '';
+            document.getElementById('oldPassword').value = '';
+          } else {
+            out.innerHTML = `<div class="alert alert-danger">${d.message || 'Update failed'}</div>`;
+          }
+        } catch (err) {
+          console.error(err);
+          out.innerHTML = '<div class="alert alert-danger">Error updating settings. Please try again later.</div>';
+        }
+      });
+    });
+
+    function logout() {
+      localStorage.removeItem('santander_user');
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>
