@@ -347,7 +347,7 @@ app.put('/api/user/:username/profile', async (req, res) => {
 // Get transactions for a specific account
 app.get('/api/account/:accountNumber/transactions', async (req, res) => {
     const { accountNumber } = req.params;
-    const { limit, startDate, endDate } = req.query;
+    const { limit, startDate, endDate, month, year } = req.query;
     
     try {
         const accountRes = await db.query('SELECT id FROM accounts WHERE account_number = $1', [accountNumber]);
@@ -361,16 +361,22 @@ app.get('/api/account/:accountNumber/transactions', async (req, res) => {
         let queryText = 'SELECT * FROM transactions WHERE account_id = $1';
         const params = [account.id];
         let idx = 2;
-        if (startDate) {
-            queryText += ` AND created_at >= $${idx++}`;
-            params.push(startDate);
-        }
-        if (endDate) {
-            // The original condition `created_at <= $endDate` would miss transactions on the end date
-            // because a date string like '2026-02-28' is treated as '2026-02-28 00:00:00'.
-            // This new condition includes the entire end date by checking for transactions before the next day.
-            queryText += ` AND created_at < ($${idx++}::date + interval '1 day')`;
-            params.push(endDate);
+
+        // Support for specific month/year filtering (Statement view)
+        if (month && year) {
+            queryText += ` AND EXTRACT(MONTH FROM created_at) = $${idx++} AND EXTRACT(YEAR FROM created_at) = $${idx++}`;
+            params.push(month);
+            params.push(year);
+        } else {
+            // Existing date filter logic (kept as fallback)
+            if (startDate) {
+                queryText += ` AND created_at >= $${idx++}`;
+                params.push(startDate);
+            }
+            if (endDate) {
+                queryText += ` AND created_at < ($${idx++}::date + interval '1 day')`;
+                params.push(endDate);
+            }
         }
         queryText += ' ORDER BY created_at DESC';
         if (limit) {
@@ -387,6 +393,38 @@ app.get('/api/account/:accountNumber/transactions', async (req, res) => {
     } catch (err) {
         console.error('Database error:', err);
         res.status(500).json({ success: false, message: 'Error fetching transactions' });
+    }
+});
+
+// Get available statement periods (months with transactions)
+app.get('/api/account/:accountNumber/statement-periods', async (req, res) => {
+    const { accountNumber } = req.params;
+    
+    try {
+        const accountRes = await db.query('SELECT id FROM accounts WHERE account_number = $1', [accountNumber]);
+        const account = accountRes.rows[0];
+
+        if (!account) {
+            return res.status(404).json({ success: false, message: 'Account not found' });
+        }
+
+        // Get distinct months from transactions
+        const query = `
+            SELECT DISTINCT 
+                EXTRACT(MONTH FROM created_at) as month,
+                EXTRACT(YEAR FROM created_at) as year,
+                TO_CHAR(created_at, 'FMMonth YYYY') as label
+            FROM transactions 
+            WHERE account_id = $1
+            ORDER BY year DESC, month DESC
+        `;
+        
+        const { rows } = await db.query(query, [account.id]);
+        
+        res.json({ success: true, periods: rows });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ success: false, message: 'Error fetching statement periods' });
     }
 });
 
