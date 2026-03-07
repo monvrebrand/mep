@@ -53,13 +53,11 @@
                               <option value="">Choose account</option>
                           </select>
                       </div>
-                      <div class="col-md-3">
-                          <label for="startDate" class="form-label">From</label>
-                          <input type="date" id="startDate" class="form-control">
-                      </div>
-                      <div class="col-md-3">
-                          <label for="endDate" class="form-label">To</label>
-                          <input type="date" id="endDate" class="form-control">
+                      <div class="col-md-6">
+                          <label for="periodSelect" class="form-label">Statement Period</label>
+                          <select id="periodSelect" class="form-select" required disabled>
+                              <option value="">Select an account first</option>
+                          </select>
                       </div>
                       <div class="col-12 text-end">
                           <button type="submit" class="btn btn-danger">Show Statements</button>
@@ -86,34 +84,57 @@
     const user = JSON.parse(userStr);
 
     try{
-      const dash=await fetch(`/api/user/${user.username}/dashboard`);
-      const dd=await dash.json();
-      if(dd.success){
-        const sel = document.getElementById('accountSelect');
-        dd.accounts.forEach(acc=>{
-          const opt=document.createElement('option'); opt.value=acc.account_number;
-          opt.textContent=`${acc.account_type} - ${acc.account_number}`;
-          sel.appendChild(opt);
+      const dashRes = await fetch(`/api/user/${user.username}/dashboard`);
+      const dashData = await dashRes.json();
+      if(dashData.success){
+        const accountSelect = document.getElementById('accountSelect');
+        dashData.accounts.forEach(acc=>{
+          const opt = document.createElement('option'); 
+          opt.value = acc.account_number;
+          opt.textContent = `${acc.account_type} - ${acc.account_number}`;
+          accountSelect.appendChild(opt);
         });
       }
-    }catch(e){console.error('load accounts',e);}    
+    } catch(e) { console.error('Error loading accounts', e); }
+
+    document.getElementById('accountSelect').addEventListener('change', async function() {
+        const accountNumber = this.value;
+        const periodSelect = document.getElementById('periodSelect');
+        periodSelect.innerHTML = '<option value="">Loading periods...</option>';
+        periodSelect.disabled = true;
+
+        if (!accountNumber) {
+            periodSelect.innerHTML = '<option value="">Select an account first</option>';
+            return;
+        }
+
+        const periodsRes = await fetch(`/api/account/${accountNumber}/statement-periods`);
+        const periodsData = await periodsRes.json();
+        periodSelect.innerHTML = '<option value="">All Transactions</option>'; // Default option
+        periodsData.periods.forEach(p => {
+            periodSelect.innerHTML += `<option value="${p.year}-${p.month}">${p.label}</option>`;
+        });
+        periodSelect.disabled = false;
+    });
 
     document.getElementById('statementForm').addEventListener('submit', async function(e){
       e.preventDefault();
-      const acct = document.getElementById('accountSelect').value;
-      const start = document.getElementById('startDate').value;
-      const end = document.getElementById('endDate').value;
+      const accountNumber = document.getElementById('accountSelect').value;
+      const period = document.getElementById('periodSelect').value;
       const container = document.getElementById('statementsContainer');
       container.innerHTML='<div class="text-center py-5"><div class="spinner-border text-danger" role="status"><span class="visually-hidden">Loading...</span></div></div>';
       try{
-        let url = `/api/account/${acct}/transactions?limit=0`;
-        if(start) url += `&startDate=${start}`;
-        if(end) url += `&endDate=${end}`;
+        let url = `/api/account/${accountNumber}/transactions?limit=0`;
+        if (period) {
+            const [year, month] = period.split('-');
+            url += `&year=${year}&month=${month}`;
+        }
+
         const res = await fetch(url);
         const data = await res.json();
         if(data.success){
           if(data.transactions.length===0){
-            container.innerHTML='<div class="alert alert-info">No transactions found for selected period.</div>';
+            container.innerHTML='<div class="alert alert-info">No transactions found for the selected period.</div>';
             return;
           }
           const rows=data.transactions.map(tx=>{
