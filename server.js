@@ -365,17 +365,29 @@ app.get('/api/account/:accountNumber/transactions', async (req, res) => {
         // Support for specific month/year filtering (Statement view)
         if (month && year) {
             queryText += ` AND EXTRACT(MONTH FROM created_at) = $${idx++} AND EXTRACT(YEAR FROM created_at) = $${idx++}`;
-            params.push(month);
-            params.push(year);
+            params.push(parseInt(month));
+            params.push(parseInt(year));
         } else {
             // Existing date filter logic (kept as fallback)
             if (startDate) {
+                let start = startDate;
+                // Convert DD/MM/YYYY to YYYY-MM-DD if necessary
+                if (/^\d{2}\/\d{2}\/\d{4}$/.test(start)) {
+                    const [d, m, y] = start.split('/');
+                    start = `${y}-${m}-${d}`;
+                }
                 queryText += ` AND created_at >= $${idx++}`;
-                params.push(startDate);
+                params.push(start);
             }
             if (endDate) {
+                let end = endDate;
+                // Convert DD/MM/YYYY to YYYY-MM-DD if necessary
+                if (/^\d{2}\/\d{2}\/\d{4}$/.test(end)) {
+                    const [d, m, y] = end.split('/');
+                    end = `${y}-${m}-${d}`;
+                }
                 queryText += ` AND created_at < ($${idx++}::date + interval '1 day')`;
-                params.push(endDate);
+                params.push(end);
             }
         }
         queryText += ' ORDER BY created_at DESC';
