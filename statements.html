@@ -10,6 +10,9 @@
   <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <link href="vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
   <link href="css/main.css" rel="stylesheet">
+  <!-- PDF Generation Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body class="index-page">
 <header id="header" class="header d-flex align-items-center" style="background-color: red;">
@@ -173,41 +176,125 @@
       }catch(err){console.error(err);container.innerHTML='<div class="alert alert-danger">Error loading statements.</div>';}    
     });
 
-    window.downloadStatement = function() {
+    window.downloadStatement = async function() {
       if (currentTransactions.length === 0) {
           alert('No transactions to download.');
           return;
       }
 
-      const headers = ['Date', 'Description', 'Type', 'Amount', 'Balance After'];
-      let csvContent = headers.join(',') + '\n';
-
-      currentTransactions.forEach(tx => {
-          const date = new Date(tx.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
-          const description = `"${(tx.description || tx.transaction_type).replace(/"/g, '""')}"`;
-          const type = tx.transaction_type;
-          const amount = tx.amount;
-          const balance = tx.balance_after;
-
-          const row = [date, description, type, amount, balance].join(',');
-          csvContent += row + '\n';
-      });
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const user = JSON.parse(localStorage.getItem('santander_user'));
       const accountSelect = document.getElementById('accountSelect');
       const periodSelect = document.getElementById('periodSelect');
-      const accountNumber = accountSelect.value;
-      const periodText = periodSelect.options[periodSelect.selectedIndex].text.replace(/\s+/g, '-');
+      const accountText = accountSelect.options[accountSelect.selectedIndex].text;
+      const periodText = periodSelect.options[periodSelect.selectedIndex].text;
+      const formatter = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' });
+
+      // 1. Add Logo (Top Right)
+      try {
+          const logoUrl = 'img/logo.png';
+          const imgData = await getBase64ImageFromUrl(logoUrl);
+          // Add image at x=160, y=10, width=35, height=10 (approx aspect ratio)
+          doc.addImage(imgData, 'PNG', 160, 10, 35, 10);
+      } catch (e) {
+          console.warn('Logo could not be loaded for PDF', e);
+      }
+
+      // 2. Header & Account Info
+      doc.setFontSize(18);
+      doc.setTextColor(220, 53, 69); // Santander Red
+      doc.text("Statement of Account", 14, 20);
       
-      link.setAttribute('download', `statement-${accountNumber}-${periodText}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+
+      // Calculate Balances
+      // currentTransactions is sorted Newest -> Oldest
+      const latestTx = currentTransactions[0];
+      const earliestTx = currentTransactions[currentTransactions.length - 1];
+      
+      const endingBalance = parseFloat(latestTx.balance_after);
+      
+      // Calculate starting balance by reversing the oldest transaction
+      let startingBalance = parseFloat(earliestTx.balance_after);
+      const amount = parseFloat(earliestTx.amount);
+      const type = earliestTx.transaction_type.toLowerCase();
+      
+      // If it was a credit, start was lower. If debit, start was higher.
+      if (type.includes('credit') || type.includes('deposit')) {
+          startingBalance -= amount;
+      } else {
+          startingBalance += amount;
+      }
+
+      // Left Column
+      doc.setFont("helvetica", "bold");
+      doc.text("Account Name:", 14, 35);
+      doc.text("Account Number:", 14, 40);
+      doc.text("Statement Period:", 14, 45);
+
+      doc.setFont("helvetica", "normal");
+      doc.text(`${user.firstname} ${user.surname}`, 50, 35);
+      doc.text(accountText.split(' - ')[1] || accountText, 50, 40);
+      doc.text(periodText, 50, 45);
+
+      // Right Column (Balances)
+      doc.setFont("helvetica", "bold");
+      doc.text("Starting Balance:", 120, 35);
+      doc.text("Ending Balance:", 120, 40);
+
+      doc.setFont("helvetica", "normal");
+      doc.text(formatter.format(startingBalance), 160, 35);
+      doc.text(formatter.format(endingBalance), 160, 40);
+
+      // 3. Transaction Table
+      // Reverse transactions to show Oldest -> Newest for the statement PDF
+      const chronologicalTxs = [...currentTransactions].reverse();
+      
+      const tableRows = chronologicalTxs.map(tx => {
+          const date = new Date(tx.created_at).toLocaleDateString('en-GB');
+          const desc = tx.description || tx.transaction_type;
+          const isDebit = tx.transaction_type.toLowerCase().includes('debit') || tx.transaction_type.toLowerCase().includes('withdrawal');
+          const sign = isDebit ? '-' : '+';
+          const amt = sign + formatter.format(tx.amount).replace('£', ''); 
+          const bal = formatter.format(tx.balance_after);
+          return [date, desc, tx.transaction_type, amt, bal];
+      });
+
+      doc.autoTable({
+          head: [['Date', 'Description', 'Type', 'Amount', 'Balance']],
+          body: tableRows,
+          startY: 55,
+          theme: 'striped',
+          headStyles: { fillColor: [220, 53, 69] }, // Santander Red
+          styles: { fontSize: 9 },
+          columnStyles: {
+              3: { halign: 'right' },
+              4: { halign: 'right' }
+          }
+      });
+
+      doc.save(`statement-${accountSelect.value}-${periodText.replace(/\s/g, '-')}.pdf`);
+    }
+
+    // Helper to load image for PDF
+    function getBase64ImageFromUrl(url) {
+        return new Promise((resolve, reject) => {
+            var img = new Image();
+            img.setAttribute("crossOrigin", "anonymous");
+            img.onload = () => {
+                var canvas = document.createElement("canvas");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                var ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0);
+                var dataURL = canvas.toDataURL("image/png");
+                resolve(dataURL);
+            };
+            img.onerror = error => reject(error);
+            img.src = url;
+        });
     }
   });
   function logout(){localStorage.removeItem('santander_user');window.location.href='index.html';}
