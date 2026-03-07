@@ -368,27 +368,7 @@ app.get('/api/account/:accountNumber/transactions', async (req, res) => {
             params.push(parseInt(month));
             params.push(parseInt(year));
         } else {
-            // Existing date filter logic (kept as fallback)
-            if (startDate) {
-                let start = startDate;
-                // Convert DD/MM/YYYY to YYYY-MM-DD if necessary
-                if (/^\d{2}\/\d{2}\/\d{4}$/.test(start)) {
-                    const [d, m, y] = start.split('/');
-                    start = `${y}-${m}-${d}`;
-                }
-                queryText += ` AND created_at >= $${idx++}`;
-                params.push(start);
-            }
-            if (endDate) {
-                let end = endDate;
-                // Convert DD/MM/YYYY to YYYY-MM-DD if necessary
-                if (/^\d{2}\/\d{2}\/\d{4}$/.test(end)) {
-                    const [d, m, y] = end.split('/');
-                    end = `${y}-${m}-${d}`;
-                }
-                queryText += ` AND created_at < ($${idx++}::date + interval '1 day')`;
-                params.push(end);
-            }
+            // Date filters removed per request to show all transactions
         }
         queryText += ' ORDER BY created_at DESC';
         if (limit) {
