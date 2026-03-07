@@ -37,7 +37,20 @@ if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname)));
+
+// Serve static files from the project root
+const publicPath = path.join(__dirname);
+app.use(express.static(publicPath, {
+  etag: false,
+  maxAge: '1d'
+}));
+
+// Serve static directories explicitly
+app.use('/css', express.static(path.join(__dirname, 'css')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
+app.use('/vendor', express.static(path.join(__dirname, 'vendor')));
+app.use('/img', express.static(path.join(__dirname, 'img')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Configure Multer for file uploads
 const storage = multer.diskStorage({
