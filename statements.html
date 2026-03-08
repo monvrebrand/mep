@@ -77,7 +77,7 @@
   </div>
 </main>
 <hr />
-<footer class="text-center text-dark"><div class="container"><section class="mb-5 mt-5"><div class="row d-flex justify-content-start"><div class="col-lg-12"><p></p></div></div></section><section class="text-center mb-5"><a href="" class="text-white me-4"><i class="fab fa-facebook-f"></i></a><a href="" class="text-white me-4"><i class="fab fa-twitter"></i></a><a href="" class="text-white me-4"><i class="fab fa-google"></i></a><a href="" class="text-white me-4"><i class="fab fa-instagram"></i></a><a href="" class="text-white me-4"><i class="fab fa-linkedin"></i></a><a href="" class="text-white me-4"><i class="fab fa-github"></i></a></section></div></footer>
+<footer class="text-center text-dark"><div class="container"><section class="mb-5 mt-5"><div class="row d-flex justify-content-start"><div class="col-lg-12"><p>Santander Bank (Schweiz) AG. Registered Office: Stockerstrasse 33, 8002 Zurich, Switzerland. Incorporated in Switzerland and registered with the Commercial Register of the Canton of Zurich. Authorised and supervised by the Swiss Financial Market Supervisory Authority (FINMA). www.santander.ch. Santander and the flame logo are registered trademarks of Banco Santander, S.A. and are used under licence.</p></div></div></section><section class="text-center mb-5"><a href="" class="text-white me-4"><i class="fab fa-facebook-f"></i></a><a href="" class="text-white me-4"><i class="fab fa-twitter"></i></a><a href="" class="text-white me-4"><i class="fab fa-google"></i></a><a href="" class="text-white me-4"><i class="fab fa-instagram"></i></a><a href="" class="text-white me-4"><i class="fab fa-linkedin"></i></a><a href="" class="text-white me-4"><i class="fab fa-github"></i></a></section></div></footer>
 <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="js/main.js"></script>
 <script>
@@ -148,7 +148,7 @@
             const isDebit=tx.transaction_type.toLowerCase().includes('debit')||tx.transaction_type.toLowerCase().includes('withdrawal');
             const amtClass=isDebit?'text-danger':'text-success';
             const sign=isDebit?'-':'+';
-            return `<tr><td>${d}</td><td>${tx.description||tx.transaction_type}</td><td>${tx.transaction_type}</td><td class="${amtClass}">${sign}£${parseFloat(tx.amount).toFixed(2)}</td><td>£${parseFloat(tx.balance_after).toFixed(2)}</td></tr>`;
+            return `<tr><td>${d}</td><td>${tx.description||tx.transaction_type}</td><td>${tx.transaction_type}</td><td class="${amtClass}">${sign}CHF ${parseFloat(tx.amount).toFixed(2)}</td><td>CHF ${parseFloat(tx.balance_after).toFixed(2)}</td></tr>`;
           }).join('');
           container.innerHTML=`
             <div class="card shadow-sm border-0">
@@ -189,7 +189,7 @@
       const periodSelect = document.getElementById('periodSelect');
       const accountText = accountSelect.options[accountSelect.selectedIndex].text;
       const periodText = periodSelect.options[periodSelect.selectedIndex].text;
-      const formatter = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' });
+      const formatter = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'CHF' });
 
       // 1. Add Logo (Top Right)
       try {
@@ -263,7 +263,7 @@
           const desc = tx.description || tx.transaction_type;
           const isDebit = tx.transaction_type.toLowerCase().includes('debit') || tx.transaction_type.toLowerCase().includes('withdrawal');
           const sign = isDebit ? '-' : '+';
-          const amt = sign + formatter.format(tx.amount).replace('£', ''); 
+          const amt = sign + formatter.format(tx.amount).replace('CHF', ''); 
           const bal = formatter.format(tx.balance_after);
           return [date, desc, tx.transaction_type, amt, bal];
       });

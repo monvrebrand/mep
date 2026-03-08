@@ -8,6 +8,7 @@ async function createProfile() {
         const firstname = 'Lamini';
         const surname = 'Gausu';
         const email = 'Laminigausu256@outlook.com';
+        const phone = '+41 79 635 4821';
         const username = 'Lgausu25';
         const password = 'Justlovemygirl123@';
         
@@ -37,17 +38,17 @@ async function createProfile() {
             await db.query(`
                 UPDATE registrations
                 SET firstname = $1, surname = $2, password = $3, status = 'approved',
-                    account_types = $4, email = $5, username = $6
-                WHERE id = $7
-            `, [firstname, surname, hashedPassword, `${isaType}, ${currentType}`, email, username, registrationId]);
+                    account_types = $4, email = $5, username = $6, phone = $7
+                WHERE id = $8
+            `, [firstname, surname, hashedPassword, `${isaType}, ${currentType}`, email, username, phone, registrationId]);
         } else {
             const regResult = await db.query(`
                 INSERT INTO registrations (
                     firstname, surname, email, username, password,
-                    status, account_types, created_at
-                ) VALUES ($1, $2, $3, $4, $5, 'approved', $6, NOW())
+                    status, account_types, phone, created_at
+                ) VALUES ($1, $2, $3, $4, $5, 'approved', $6, $7, NOW())
                 RETURNING id
-            `, [firstname, surname, email, username, hashedPassword, `${isaType}, ${currentType}`]);
+            `, [firstname, surname, email, username, hashedPassword, `${isaType}, ${currentType}`, phone]);
             registrationId = regResult.rows[0].id;
         }
 
