@@ -29,6 +29,9 @@ if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
       pass: process.env.SMTP_PASS
     }
   });
+  if (!process.env.SMTP_FROM) {
+    process.env.SMTP_FROM = process.env.SMTP_USER;
+  }
   console.log('Email transporter configured');
 } else {
   console.warn('SMTP configuration missing - email replies will not work');
@@ -565,8 +568,8 @@ app.post('/api/forgot-password', async (req, res) => {
             const resetLink = `http://localhost:${PORT}/reset-password.html?email=${encodeURIComponent(email)}`;
             
             try {
-                await transporter.sendMail({
-                    from: `${process.env.SMTP_FROM_NAME || 'Santander Support'} <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+              await transporter.sendMail({
+                    from: `"${process.env.SMTP_FROM_NAME || 'Santander Support'}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
                     to: email,
                     subject: 'Password Reset Request',
                     html: `
@@ -578,6 +581,8 @@ app.post('/api/forgot-password', async (req, res) => {
                         <p>If you did not request this, please ignore this email.</p>
                     `
                 });
+                console.log(`Password reset link sent successfully to ${email}`);
+                res.json({ success: true, message: 'Password reset link sent to your email.' });
             } catch (emailErr) {
                 console.error('Failed to send email:', emailErr);
                 return res.status(500).json({ success: false, message: 'Failed to send reset email.' });
@@ -672,7 +677,7 @@ app.post('/api/admin/registrations/:id/status', requireAuth, async (req, res) =>
         // Send Email Notification
         if (transporter) {
             try {
-                const isApproved = status === 'approved';
+              const isApproved = status === 'approved';
                 const subject = isApproved ? 'Santander Account Application Approved' : 'Important Update on your Santander Account';
                 let html;
 
@@ -714,11 +719,12 @@ app.post('/api/admin/registrations/:id/status', requireAuth, async (req, res) =>
                 }
 
                 await transporter.sendMail({
-                    from: `${process.env.SMTP_FROM_NAME || 'Santander Support'} <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+                  from: `"${process.env.SMTP_FROM_NAME || 'Santander Support'}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
                     to: registration.email,
                     subject: subject,
                     html: html
                 });
+                console.log(`Registration status updated successfully for ${registration.email}`);
             } catch (emailErr) {
                 console.error('Failed to send email:', emailErr);
             }
@@ -791,10 +797,26 @@ app.post('/api/messages/:id/reply', requireAuth, async (req, res) => {
 
         if (transporter) {
             try {
-                const mailOptions = {
-                    from: `${process.env.SMTP_FROM_NAME || 'Santander Support'} <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+              console.log(`Attempting to send reply to: ${message.email}`);
+              const mailOptions = {
+                  from: `"${process.env.SMTP_FROM_NAME || 'Santander Support'}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
                     to: message.email,
                     subject: `Re: ${message.subject}`,
+                    text: `
+Reply from Santander Support
+
+Hello ${message.name},
+
+Thank you for contacting Santander. Here is our response to your inquiry:
+
+${reply_text}
+
+If you have any further questions, please don't hesitate to contact us.
+
+Best regards,
+Santander Support Team
+Original Message Subject: ${message.subject}
+`,
                     html: `
                         <h2>Reply from Santander Support</h2>
                         <p>Hello ${message.name},</p>
@@ -809,11 +831,12 @@ app.post('/api/messages/:id/reply', requireAuth, async (req, res) => {
                     `
                 };
                 await transporter.sendMail(mailOptions);
-                console.log(`Reply sent to ${message.email}`);
+                console.log(`Reply sent successfully to ${message.email}`);
                 res.json({ success: true, message: 'Reply saved and email sent successfully', replyId });
             } catch (emailError) {
                 console.error('Email send error:', emailError);
-                res.json({ success: true, message: 'Reply saved but email could not be sent', replyId, emailError: emailError.message });
+                // Return success: false so the admin UI shows the error
+                res.json({ success: false, message: 'Reply saved but email FAILED to send: ' + emailError.message, replyId });
             }
         } else {
             res.json({ success: true, message: 'Reply saved (email transporter not configured)', replyId });
@@ -852,9 +875,9 @@ app.post('/api/chat/send', async (req, res) => {
             // Send email notification to admin for new chat
             if (transporter && process.env.ADMIN_EMAIL) {
                 try {
-                    const adminUrl = `http://localhost:${PORT}/admin-messages.html`;
-                    await transporter.sendMail({
-                        from: `${process.env.SMTP_FROM_NAME || 'Santander Support'} <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+                  const adminUrl = `http://localhost:${PORT}/admin-messages.html`;
+                  await transporter.sendMail({
+                        from: `"${process.env.SMTP_FROM_NAME || 'Santander Support'}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
                         to: process.env.ADMIN_EMAIL,
                         subject: `New Live Chat Request from ${sender_name}`,
                         html: `

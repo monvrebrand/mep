@@ -14,6 +14,10 @@ const pool = new Pool({
   ssl: isLocal ? false : { rejectUnauthorized: false }
 });
 
+pool.on('error', (err, client) => {
+  console.error('DATABASE POOL ERROR:', err);
+});
+
 module.exports = {
   query: (text, params) => pool.query(text, params),
 };
