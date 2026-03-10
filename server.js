@@ -29,9 +29,6 @@ if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
       pass: process.env.SMTP_PASS
     }
   });
-  if (!process.env.SMTP_FROM) {
-    process.env.SMTP_FROM = process.env.SMTP_USER;
-  }
   console.log('Email transporter configured');
 } else {
   console.warn('SMTP configuration missing - email replies will not work');
@@ -58,8 +55,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Configure Multer for file uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        // On a VM, we want uploads to be persistent.
-        const dir = './uploads';
+        // Use /tmp in production (Vercel) because the root is read-only
+        const dir = process.env.NODE_ENV === 'production' ? '/tmp' : './uploads';
         if (!fs.existsSync(dir)){
             fs.mkdirSync(dir, { recursive: true });
         }
@@ -565,12 +562,11 @@ app.post('/api/forgot-password', async (req, res) => {
         }
 
         if (transporter) {
-            const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
-            const resetLink = `${baseUrl}/reset-password.html?email=${encodeURIComponent(email)}`;
+            const resetLink = `http://localhost:${PORT}/reset-password.html?email=${encodeURIComponent(email)}`;
             
             try {
-              await transporter.sendMail({
-                    from: `"${process.env.SMTP_FROM_NAME || 'Santander Support'}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+                await transporter.sendMail({
+                    from: `${process.env.SMTP_FROM_NAME || 'Santander Support'} <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
                     to: email,
                     subject: 'Password Reset Request',
                     html: `
@@ -582,8 +578,6 @@ app.post('/api/forgot-password', async (req, res) => {
                         <p>If you did not request this, please ignore this email.</p>
                     `
                 });
-                console.log(`Password reset link sent successfully to ${email}`);
-                res.json({ success: true, message: 'Password reset link sent to your email.' });
             } catch (emailErr) {
                 console.error('Failed to send email:', emailErr);
                 return res.status(500).json({ success: false, message: 'Failed to send reset email.' });
@@ -678,7 +672,7 @@ app.post('/api/admin/registrations/:id/status', requireAuth, async (req, res) =>
         // Send Email Notification
         if (transporter) {
             try {
-              const isApproved = status === 'approved';
+                const isApproved = status === 'approved';
                 const subject = isApproved ? 'Santander Account Application Approved' : 'Important Update on your Santander Account';
                 let html;
 
@@ -720,12 +714,11 @@ app.post('/api/admin/registrations/:id/status', requireAuth, async (req, res) =>
                 }
 
                 await transporter.sendMail({
-                  from: `"${process.env.SMTP_FROM_NAME || 'Santander Support'}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+                    from: `${process.env.SMTP_FROM_NAME || 'Santander Support'} <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
                     to: registration.email,
                     subject: subject,
                     html: html
                 });
-                console.log(`Registration status updated successfully for ${registration.email}`);
             } catch (emailErr) {
                 console.error('Failed to send email:', emailErr);
             }
@@ -798,26 +791,10 @@ app.post('/api/messages/:id/reply', requireAuth, async (req, res) => {
 
         if (transporter) {
             try {
-              console.log(`Attempting to send reply to: ${message.email}`);
-              const mailOptions = {
-                  from: `"${process.env.SMTP_FROM_NAME || 'Santander Support'}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+                const mailOptions = {
+                    from: `${process.env.SMTP_FROM_NAME || 'Santander Support'} <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
                     to: message.email,
                     subject: `Re: ${message.subject}`,
-                    text: `
-Reply from Santander Support
-
-Hello ${message.name},
-
-Thank you for contacting Santander. Here is our response to your inquiry:
-
-${reply_text}
-
-If you have any further questions, please don't hesitate to contact us.
-
-Best regards,
-Santander Support Team
-Original Message Subject: ${message.subject}
-`,
                     html: `
                         <h2>Reply from Santander Support</h2>
                         <p>Hello ${message.name},</p>
@@ -832,12 +809,11 @@ Original Message Subject: ${message.subject}
                     `
                 };
                 await transporter.sendMail(mailOptions);
-                console.log(`Reply sent successfully to ${message.email}`);
+                console.log(`Reply sent to ${message.email}`);
                 res.json({ success: true, message: 'Reply saved and email sent successfully', replyId });
             } catch (emailError) {
                 console.error('Email send error:', emailError);
-                // Return success: false so the admin UI shows the error
-                res.json({ success: false, message: 'Reply saved but email FAILED to send: ' + emailError.message, replyId });
+                res.json({ success: true, message: 'Reply saved but email could not be sent', replyId, emailError: emailError.message });
             }
         } else {
             res.json({ success: true, message: 'Reply saved (email transporter not configured)', replyId });
@@ -876,10 +852,9 @@ app.post('/api/chat/send', async (req, res) => {
             // Send email notification to admin for new chat
             if (transporter && process.env.ADMIN_EMAIL) {
                 try {
-                  const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
-                  const adminUrl = `${baseUrl}/admin-messages.html`;
-                  await transporter.sendMail({
-                        from: `"${process.env.SMTP_FROM_NAME || 'Santander Support'}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+                    const adminUrl = `http://localhost:${PORT}/admin-messages.html`;
+                    await transporter.sendMail({
+                        from: `${process.env.SMTP_FROM_NAME || 'Santander Support'} <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
                         to: process.env.ADMIN_EMAIL,
                         subject: `New Live Chat Request from ${sender_name}`,
                         html: `
@@ -1012,9 +987,14 @@ app.put('/api/chat/sessions/:sessionId/close', (req, res, next) => {
         res.status(500).json({ success: false, message: 'Error closing session' });
     }
 });
+// Start the server (for local development)
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`View Business Accounts at http://localhost:${PORT}/business-accounts.html`);
+    console.log(`Admin Login at http://localhost:${PORT}/admin-login.html`);
+  });
+}
 
-// Start the server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on port ${PORT} and accessible externally.`);
-  console.log(`To access, use your server's IP or domain, e.g., http://0.0.0.0:${PORT}/`);
-});
+// Export app for Vercel serverless
+module.exports = app;
