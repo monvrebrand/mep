@@ -58,8 +58,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Configure Multer for file uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        // Use /tmp in production (Vercel) because the root is read-only
-        const dir = process.env.NODE_ENV === 'production' ? '/tmp' : './uploads';
+        // On a VM, we want uploads to be persistent.
+        const dir = './uploads';
         if (!fs.existsSync(dir)){
             fs.mkdirSync(dir, { recursive: true });
         }
@@ -565,7 +565,8 @@ app.post('/api/forgot-password', async (req, res) => {
         }
 
         if (transporter) {
-            const resetLink = `http://localhost:${PORT}/reset-password.html?email=${encodeURIComponent(email)}`;
+            const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+            const resetLink = `${baseUrl}/reset-password.html?email=${encodeURIComponent(email)}`;
             
             try {
               await transporter.sendMail({
@@ -875,7 +876,8 @@ app.post('/api/chat/send', async (req, res) => {
             // Send email notification to admin for new chat
             if (transporter && process.env.ADMIN_EMAIL) {
                 try {
-                  const adminUrl = `http://localhost:${PORT}/admin-messages.html`;
+                  const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+                  const adminUrl = `${baseUrl}/admin-messages.html`;
                   await transporter.sendMail({
                         from: `"${process.env.SMTP_FROM_NAME || 'Santander Support'}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
                         to: process.env.ADMIN_EMAIL,
@@ -1010,14 +1012,9 @@ app.put('/api/chat/sessions/:sessionId/close', (req, res, next) => {
         res.status(500).json({ success: false, message: 'Error closing session' });
     }
 });
-// Start the server (for local development)
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-    console.log(`View Business Accounts at http://localhost:${PORT}/business-accounts.html`);
-    console.log(`Admin Login at http://localhost:${PORT}/admin-login.html`);
-  });
-}
 
-// Export app for Vercel serverless
-module.exports = app;
+// Start the server
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on port ${PORT} and accessible externally.`);
+  console.log(`To access, use your server's IP or domain, e.g., http://0.0.0.0:${PORT}/`);
+});
