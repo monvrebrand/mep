@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>santander | Make a Payment</title>
+  <title>mep | Make a Payment</title>
   <meta name="description" content="">
   <meta name="keywords" content="">
 
@@ -30,10 +30,22 @@
           </ul>
       </nav>
 
-      <div class="ms-auto">
+      <div class="ms-auto d-flex align-items-center">
             <a class="btn-getstarted" href="inside.html">Dashboard</a>
             <a class="btn-getstarted" href="customer-support.html">Contact</a>
-            <button class="btn-getstarted bg-white border-0" onclick="logout()" style="color: red;">Log out</button>
+            
+              <div class="dropdown d-inline-block ms-2 me-2">
+                <a class="nav-link position-relative" href="#" role="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 8px 15px; border-radius: 4px; display: inline-flex; align-items: center;">
+                  <i class="bi bi-bell fs-5 text-white"></i>
+                  <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-white text-danger d-none" style="font-size: 0.6rem; margin-top: 5px; margin-left: -5px;">
+                    0
+                  </span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="notificationDropdown" id="notificationList" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                  <li><div class="dropdown-item text-center text-muted">No notifications</div></li>
+                </ul>
+              </div>
+              <button class="btn-getstarted bg-white border-0" onclick="logout()" style="color: red;">Log out</button>
     </div>
   </div>
 </header>
@@ -134,7 +146,7 @@
 
     // populate fromAccount dropdown with user's accounts
     try {
-      const dashRes = await fetch(`/api/user/${user.username}/dashboard`);
+      const dashRes = await fetch(`/api/user/${user.username}/dashboard`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('customerToken')}` } });
       const dashData = await dashRes.json();
       if (dashData.success) {
         const select = document.getElementById('fromAccount');
@@ -162,7 +174,7 @@
       try {
         const res = await fetch('/api/transfer', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {  'Content-Type': 'application/json' , 'Authorization': `Bearer ${localStorage.getItem('customerToken')}` },
           body: JSON.stringify({ fromAccount: from, toAccount: to, amount, description })
         });
         const data = await res.json();
@@ -186,5 +198,6 @@
     window.location.href = 'index.html';
   }
 </script>
+  <script src="js/notifications.js"></script>
 </body>
 </html>

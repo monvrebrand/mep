@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Santander | Log on to Online Banking</title>
+  <title>mep | Log on to Online Banking</title>
   <meta name="description" content="Log on to your Santander online banking account securely.">
   <meta name="keywords" content="">
 
@@ -205,6 +205,7 @@
             const data = await response.json();
             
             if (data.success) {
+                localStorage.setItem('customerToken', data.token);
                 localStorage.setItem('santander_user', JSON.stringify(data.user));
                 window.location.href = 'inside.html';
             } else {

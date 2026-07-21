@@ -121,6 +121,19 @@ async function initDb() {
         `);
         console.log('Created transactions table');
 
+        // Create notifications table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS notifications (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                type VARCHAR(50) DEFAULT 'alert',
+                is_read BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log('Created notifications table');
+
         console.log('Database initialization complete.');
         process.exit(0);
     } catch (err) {

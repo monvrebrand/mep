@@ -4,17 +4,16 @@ const nodemailer = require('nodemailer');
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
 const db = require('./db');
 const PORT = process.env.PORT || 3000;
 
-// Admin credentials (in production, these should be hashed and stored securely)
-const ADMIN_CREDENTIALS = {
-  username: 'admin',
-  password: 'password123'
-};
+// Admin credentials are now loaded from .env
 
 // Email transporter setup
 let transporter;
@@ -33,6 +32,18 @@ if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
 } else {
   console.warn('SMTP configuration missing - email replies will not work');
 }
+
+// Security Middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabling CSP for now to prevent breaking existing inline scripts/styles
+}));
+
+// Rate Limiting
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limit each IP to 10 login requests per windowMs
+  message: { success: false, message: 'Too many login attempts, please try again after 15 minutes' }
+});
 
 // Middleware
 app.use(express.json());
@@ -84,37 +95,60 @@ async function generateUniqueAccountNumber() {
     return accountNumber;
 }
 
-// Generate a simple token (in production, use JWT)
-function generateToken() {
-    return 'admin_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+// Generate JWT token
+function generateToken(payload) {
+    return jwt.sign(payload, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '1d' });
 }
 
-// Middleware to check authentication
+// Middleware to check Admin authentication
 function requireAuth(req, res, next) {
     const token = req.headers['authorization']?.replace('Bearer ', '');
-    
-    // For simplicity, we'll just check if a token was provided
-    // In production, you'd verify the token properly
-    if (!token || !token.startsWith('admin_')) {
+    if (!token) {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
-    
-    next();
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+        if (decoded.role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Forbidden' });
+        }
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ success: false, message: 'Invalid token' });
+    }
+}
+
+// Middleware to check Customer authentication
+function requireCustomerAuth(req, res, next) {
+    const token = req.headers['authorization']?.replace('Bearer ', '');
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+        req.user = decoded; // Contains customer username, etc.
+        next();
+    } catch (err) {
+        return res.status(401).json({ success: false, message: 'Invalid token' });
+    }
 }
 
 // API Routes
 
 // Admin login
-app.post('/api/admin/login', (req, res) => {
+app.post('/api/admin/login', loginLimiter, (req, res) => {
     const { username, password } = req.body;
     
     if (!username || !password) {
         return res.status(400).json({ success: false, message: 'Username and password required' });
     }
     
+    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'password123';
+    
     // Check credentials
-    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-        const token = generateToken();
+    if (username === adminUsername && password === adminPassword) {
+        const token = generateToken({ role: 'admin', username });
         res.json({ 
             success: true, 
             message: 'Login successful',
@@ -126,13 +160,8 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 // Verify token
-app.post('/api/admin/verify', (req, res) => {
-    const token = req.headers['authorization']?.replace('Bearer ', '');
-    
-    if (!token || !token.startsWith('admin_')) {
-        return res.status(401).json({ success: false, message: 'Invalid token' });
-    }
-    
+app.post('/api/admin/verify', requireAuth, (req, res) => {
+    // If requireAuth passes, token is valid
     res.json({ success: true, message: 'Token valid' });
 });
 
@@ -201,7 +230,7 @@ app.post('/api/register', upload.single('idDocument'), async (req, res) => {
 });
 
 // Customer Login
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', loginLimiter, async (req, res) => {
     const { username, password } = req.body;
 
     try {
@@ -226,10 +255,12 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ success: false, message: 'Account application is pending or rejected' }); 
         }
 
-        // In a real app, you would generate a JWT here
+        // Generate customer JWT
+        const token = generateToken({ role: 'customer', username: user.username });
         res.json({ 
             success: true, 
             message: 'Login successful', 
+            token: token,
             user: { 
                 username: user.username,
                 firstname: user.firstname, 
@@ -243,8 +274,12 @@ app.post('/api/login', async (req, res) => {
 });
 
 // Get user dashboard data
-app.get('/api/user/:username/dashboard', async (req, res) => {
+app.get('/api/user/:username/dashboard', requireCustomerAuth, async (req, res) => {
     const { username } = req.params;
+    
+    if (req.user.username !== username) {
+        return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
     
     try {
         // Get user details
@@ -273,8 +308,13 @@ app.get('/api/user/:username/dashboard', async (req, res) => {
 });
 
 // Get user profile (all fields except password)
-app.get('/api/user/:username/profile', async (req, res) => {
+app.get('/api/user/:username/profile', requireCustomerAuth, async (req, res) => {
     const { username } = req.params;
+    
+    if (req.user.username !== username) {
+        return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+    
     try {
         const { rows } = await db.query(
             `SELECT firstname, middlename, surname, dob, id_number, address, email, phone, account_types, status, email_notifications
@@ -291,9 +331,13 @@ app.get('/api/user/:username/profile', async (req, res) => {
 });
 
 // Update user profile (email, phone, password optional)
-app.put('/api/user/:username/profile', async (req, res) => {
+app.put('/api/user/:username/profile', requireCustomerAuth, async (req, res) => {
     const { username } = req.params;
     const { email, phone, oldPassword, newPassword, emailNotifications } = req.body;
+
+    if (req.user.username !== username) {
+        return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
 
     try {
         const { rows } = await db.query('SELECT * FROM registrations WHERE username = $1', [username]);
@@ -344,8 +388,44 @@ app.put('/api/user/:username/profile', async (req, res) => {
     }
 });
 
+// Get unread notifications
+app.get('/api/user/:username/notifications', requireCustomerAuth, async (req, res) => {
+    const { username } = req.params;
+    if (req.user.username !== username) {
+        return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+    try {
+        const { rows } = await db.query(
+            'SELECT * FROM notifications WHERE username = $1 ORDER BY created_at DESC LIMIT 50',
+            [username]
+        );
+        res.json({ success: true, notifications: rows });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ success: false, message: 'Error fetching notifications' });
+    }
+});
+
+// Mark notifications as read
+app.put('/api/user/:username/notifications/read', requireCustomerAuth, async (req, res) => {
+    const { username } = req.params;
+    if (req.user.username !== username) {
+        return res.status(403).json({ success: false, message: 'Forbidden' });
+    }
+    try {
+        await db.query(
+            'UPDATE notifications SET is_read = TRUE WHERE username = $1 AND is_read = FALSE',
+            [username]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ success: false, message: 'Error updating notifications' });
+    }
+});
+
 // Get transactions for a specific account
-app.get('/api/account/:accountNumber/transactions', async (req, res) => {
+app.get('/api/account/:accountNumber/transactions', requireCustomerAuth, async (req, res) => {
     const { accountNumber } = req.params;
     const { limit, startDate, endDate, month, year } = req.query;
     
@@ -389,7 +469,7 @@ app.get('/api/account/:accountNumber/transactions', async (req, res) => {
 });
 
 // Get available statement periods (months with transactions)
-app.get('/api/account/:accountNumber/statement-periods', async (req, res) => {
+app.get('/api/account/:accountNumber/statement-periods', requireCustomerAuth, async (req, res) => {
     const { accountNumber } = req.params;
     
     try {
@@ -421,7 +501,7 @@ app.get('/api/account/:accountNumber/statement-periods', async (req, res) => {
 });
 
 // Create a transfer/payment between accounts
-app.post('/api/transfer', async (req, res) => {
+app.post('/api/transfer', requireCustomerAuth, async (req, res) => {
     const { fromAccount, toAccount, amount, description } = req.body;
 
     if (!fromAccount || !toAccount || !amount) {
@@ -481,6 +561,19 @@ app.post('/api/transfer', async (req, res) => {
 
         await db.query('COMMIT');
 
+        // Insert notification for sender
+        try {
+            await db.query(`INSERT INTO notifications (username, message, type) VALUES ($1, $2, $3)`, [req.user.username, `You successfully transferred $${amt.toFixed(2)} to account ${toAccount}.`, 'transfer']);
+            
+            // Lookup receiver username
+            const toUserRes = await db.query('SELECT username FROM registrations WHERE id = $1', [toAcc.registration_id]);
+            if (toUserRes.rows[0]) {
+                await db.query(`INSERT INTO notifications (username, message, type) VALUES ($1, $2, $3)`, [toUserRes.rows[0].username, `You received a transfer of $${amt.toFixed(2)} from account ${fromAccount}.`, 'transfer']);
+            }
+        } catch (notifErr) {
+            console.error('Failed to create transfer notifications:', notifErr);
+        }
+
         res.json({ success: true, message: 'Transfer completed', fromBalance: newFromBal, toBalance: newToBal });
     } catch (err) {
         await db.query('ROLLBACK');
@@ -490,7 +583,7 @@ app.post('/api/transfer', async (req, res) => {
 });
 
 // Pay a bill (debit from user account and record transaction)
-app.post('/api/billpay', async (req, res) => {
+app.post('/api/billpay', requireCustomerAuth, async (req, res) => {
     const { fromAccount, payeeName, amount, description } = req.body;
 
     if (!fromAccount || !payeeName || !amount) {
@@ -532,6 +625,12 @@ app.post('/api/billpay', async (req, res) => {
             [fromAcc.id, 'Debit', amt, description || `Bill to ${payeeName}`, newFromBal, now]
         );
         await db.query('COMMIT');
+
+        try {
+            await db.query(`INSERT INTO notifications (username, message, type) VALUES ($1, $2, $3)`, [req.user.username, `Bill payment of $${amt.toFixed(2)} to ${payeeName} was successful.`, 'bill']);
+        } catch (notifErr) {
+            console.error('Failed to create bill notification:', notifErr);
+        }
 
         res.json({ success: true, message: 'Bill paid', newBalance: newFromBal });
     } catch (err) {

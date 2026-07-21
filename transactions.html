@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>santander | Transactions</title>
+  <title>mep | Transactions</title>
   <meta name="description" content="">
   <meta name="keywords" content="">
 
@@ -43,9 +43,21 @@
             </ul>
         </nav>
 
-        <div class="ms-auto">
+        <div class="ms-auto d-flex align-items-center">
               <a class="btn-getstarted" href="inside.html">Dashboard</a>
               <a class="btn-getstarted" href="customer-support.html">Contact</a>
+              
+              <div class="dropdown d-inline-block ms-2 me-2">
+                <a class="nav-link position-relative" href="#" role="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 8px 15px; border-radius: 4px; display: inline-flex; align-items: center;">
+                  <i class="bi bi-bell fs-5 text-white"></i>
+                  <span id="notificationBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-white text-danger d-none" style="font-size: 0.6rem; margin-top: 5px; margin-left: -5px;">
+                    0
+                  </span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="notificationDropdown" id="notificationList" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                  <li><div class="dropdown-item text-center text-muted">No notifications</div></li>
+                </ul>
+              </div>
               <button class="btn-getstarted bg-white border-0" onclick="logout()" style="color: red;">Log out</button>
       </div>
     </div>
@@ -188,7 +200,7 @@
     async function loadTransactions(username, accountNumber) {
         try {
             // Fetch all user's dashboard data to get account info
-            const dashboardRes = await fetch(`/api/user/${username}/dashboard`);
+            const dashboardRes = await fetch(`/api/user/${username}/dashboard`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('customerToken')}` } });
             const dashboardData = await dashboardRes.json();
 
             if (!dashboardData.success) {
@@ -234,7 +246,7 @@
             `;
 
             // Fetch transactions
-            const txnRes = await fetch(`/api/account/${accountNumber}/transactions`);
+            const txnRes = await fetch(`/api/account/${accountNumber}/transactions`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('customerToken')}` } });
             const txnData = await txnRes.json();
 
             if (!txnData.success) {
@@ -307,6 +319,7 @@
     }
   </script>
 
+  <script src="js/notifications.js"></script>
 </body>
 
 </html>
