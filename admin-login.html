@@ -254,7 +254,7 @@
 
         <!-- Back Link -->
         <div class="back-link">
-          <a href="index.html">
+          <a href="index">
             <i class="bi bi-arrow-left"></i> Back to Home
           </a>
         </div>
@@ -269,7 +269,7 @@
     document.addEventListener('DOMContentLoaded', function() {
       // Check if already logged in
       if (localStorage.getItem('adminToken')) {
-        window.location.href = 'admin-messages.html';
+        window.location.href='admin-messages';
       }
 
       const loginForm = document.getElementById('loginForm');
@@ -309,7 +309,7 @@
           if (data.success) {
             // Save token and redirect
             localStorage.setItem('adminToken', data.token);
-            window.location.href = 'admin-messages.html';
+            window.location.href='admin-messages';
           } else {
             showError(data.message || 'Invalid username or password');
           }

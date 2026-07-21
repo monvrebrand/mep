@@ -386,7 +386,7 @@
           <i class="bi bi-shield-lock"></i> Santander Admin Panel
         </h2>
         <div style="display: flex; gap: 10px;">
-          <a href="index.html" class="btn btn-outline-light btn-sm">Back to Home</a>
+          <a href="index" class="btn btn-outline-light btn-sm">Back to Home</a>
           <button class="btn btn-light btn-sm" onclick="logout()">
             <i class="bi bi-box-arrow-right"></i> Logout
           </button>
@@ -698,7 +698,7 @@
       
       if (!adminToken) {
         // Redirect to login if not authenticated
-        window.location.href = 'admin-login.html';
+        window.location.href='admin-login';
         return;
       }
 
@@ -775,7 +775,7 @@
         if (!response.ok) {
           if (response.status === 401) {
             localStorage.removeItem('adminToken');
-            window.location.href = 'admin-login.html';
+            window.location.href='admin-login';
           }
           throw new Error('Failed to load chat sessions');
         }
@@ -842,7 +842,7 @@
         if (!response.ok) {
           if (response.status === 401) {
             localStorage.removeItem('adminToken');
-            window.location.href = 'admin-login.html';
+            window.location.href='admin-login';
           }
           throw new Error('Failed to load chat messages');
         }
@@ -920,7 +920,7 @@
         if (!response.ok) {
           if (response.status === 401) {
             localStorage.removeItem('adminToken');
-            window.location.href = 'admin-login.html';
+            window.location.href='admin-login';
           }
           throw new Error('Failed to send reply');
         }
@@ -953,7 +953,7 @@
         if (!response.ok) {
           if (response.status === 401) {
             localStorage.removeItem('adminToken');
-            window.location.href = 'admin-login.html';
+            window.location.href='admin-login';
           }
           throw new Error('Failed to close chat session');
         }
@@ -984,12 +984,12 @@
         if (!response.ok) {
           // Token is invalid, redirect to login
           localStorage.removeItem('adminToken');
-          window.location.href = 'admin-login.html';
+          window.location.href='admin-login';
         }
       } catch (error) {
         console.error('Token verification failed:', error);
         localStorage.removeItem('adminToken');
-        window.location.href = 'admin-login.html';
+        window.location.href='admin-login';
       }
     }
 
@@ -1005,7 +1005,7 @@
         if (!response.ok) {
           if (response.status === 401) {
             localStorage.removeItem('adminToken');
-            window.location.href = 'admin-login.html';
+            window.location.href='admin-login';
           }
           throw new Error('Failed to load messages');
         }
@@ -1126,7 +1126,7 @@
         if (!response.ok) {
           if (response.status === 401) {
             localStorage.removeItem('adminToken');
-            window.location.href = 'admin-login.html';
+            window.location.href='admin-login';
           }
           throw new Error('Failed to load replies');
         }
@@ -1195,7 +1195,7 @@
         if (!response.ok) {
           if (response.status === 401) {
             localStorage.removeItem('adminToken');
-            window.location.href = 'admin-login.html';
+            window.location.href='admin-login';
           }
           throw new Error('Failed to send reply');
         }
@@ -1240,7 +1240,7 @@
         if (!response.ok) {
           if (response.status === 401) {
             localStorage.removeItem('adminToken');
-            window.location.href = 'admin-login.html';
+            window.location.href='admin-login';
           }
           throw new Error('Failed to update message');
         }
@@ -1284,7 +1284,7 @@
         if (!response.ok) {
           if (response.status === 401) {
             localStorage.removeItem('adminToken');
-            window.location.href = 'admin-login.html';
+            window.location.href='admin-login';
           }
           throw new Error('Failed to delete message');
         }
@@ -1388,7 +1388,7 @@
         if (!response.ok) {
           if (response.status === 401) {
             localStorage.removeItem('adminToken');
-            window.location.href = 'admin-login.html';
+            window.location.href='admin-login';
           }
           throw new Error('Failed to load registrations');
         }
@@ -1548,7 +1548,7 @@
     function logout() {
       if (confirm('Are you sure you want to logout?')) {
         localStorage.removeItem('adminToken');
-        window.location.href = 'admin-login.html';
+        window.location.href='admin-login';
       }
     }
   </script>

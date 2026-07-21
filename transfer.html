@@ -18,17 +18,18 @@
   <div class="container-fluid container-xl d-flex align-items-center justify-content-between">
       <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       <nav id="navmenu" class="navmenu">
-          <ul>
-              <li><a href="personal.html" class="active text-white">Personal</a></li>
-              <li><a href="private.html" class="text-white">Private</a></li>
-              <li><a href="business.html" class="text-white">Business</a></li>
-              <li><a href="corporate.html" class="text-white">Corporate</a></li>
-          </ul>
-      </nav>
+            <ul>
+                <li><a href="inside" class="text-white">Dashboard</a></li>
+                <li><a href="transfer" class="text-white">Transfer</a></li>
+                <li><a href="pay-bill" class="text-white">Pay Bills</a></li>
+                <li><a href="statements" class="text-white">Statements</a></li>
+                <li><a href="account-settings" class="text-white">Settings</a></li>
+            </ul>
+        </nav>
 
       <div class="ms-auto d-flex align-items-center">
-            <a class="btn-getstarted" href="inside.html">Dashboard</a>
-            <a class="btn-getstarted" href="customer-support.html">Contact</a>
+            <a class="btn-getstarted" href="inside">Dashboard</a>
+            <a class="btn-getstarted" href="customer-support">Contact</a>
             
               <div class="dropdown d-inline-block ms-2 me-2">
                 <a class="nav-link position-relative" href="#" role="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 8px 15px; border-radius: 4px; display: inline-flex; align-items: center;">
@@ -47,7 +48,7 @@
 </header>
 <header id="header" class="header align-items-center">
   <div class="container-fluid container-xl position-relative d-flex align-items-center">
-    <a href="inside.html" class="logo d-flex align-items-center me-auto">
+    <a href="inside" class="logo d-flex align-items-center me-auto">
       <img src="img/logo.png" alt="" class="img-fluid" >
       <h4 class="pt-3 fw-bold" style="color: red;">Santander</h4>
     </a>
@@ -58,7 +59,7 @@
   <div class="container mt-5">
       <div class="row mb-4">
           <div class="col-12">
-              <a href="inside.html" class="text-decoration-none" style="color: red;"><i class="bi bi-arrow-left me-2"></i>Back to Dashboard</a>
+              <a href="inside" class="text-decoration-none" style="color: red;"><i class="bi bi-arrow-left me-2"></i>Back to Dashboard</a>
           </div>
       </div>
       <div class="row">
@@ -102,7 +103,7 @@
 <script>
   document.addEventListener('DOMContentLoaded', async function(){
     const userStr=localStorage.getItem('santander_user');
-    if(!userStr){window.location.href='login.html';return;}
+    if(!userStr){window.location.href='login';return;}
     const user=JSON.parse(userStr);
     try{
       const dash=await fetch(`/api/user/${user.username}/dashboard`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('customerToken')}` } });
@@ -134,7 +135,7 @@
       }catch(err){console.error(err);out.innerHTML='<div class="alert alert-danger">Error sending transfer.</div>';}    
     });
   });
-  function logout(){localStorage.removeItem('santander_user');window.location.href='index.html';}
+  function logout(){localStorage.removeItem('santander_user');window.location.href='index';}
 </script>
   <script src="js/notifications.js"></script>
 </body>

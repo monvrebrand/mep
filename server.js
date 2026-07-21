@@ -53,7 +53,8 @@ app.use(express.urlencoded({ extended: true }));
 const publicPath = path.join(__dirname);
 app.use(express.static(publicPath, {
   etag: false,
-  maxAge: '1d'
+  maxAge: '1d',
+  extensions: ['html']
 }));
 
 // Serve static directories explicitly
@@ -523,10 +524,8 @@ app.post('/api/transfer', requireCustomerAuth, async (req, res) => {
         if (!fromAcc) {
             return res.status(404).json({ success: false, message: 'Source account not found' });
         }
-        if (!toAcc) {
-            return res.status(404).json({ success: false, message: 'Destination account not found' });
-        }
-
+        // We removed the strictly internal destination check here to allow external transfers
+        
         // Check if user is suspended
         const userRes = await db.query('SELECT status FROM registrations WHERE id = $1', [fromAcc.registration_id]);
         if (userRes.rows[0] && userRes.rows[0].status === 'suspended') {
@@ -541,23 +540,25 @@ app.post('/api/transfer', requireCustomerAuth, async (req, res) => {
         await db.query('BEGIN');
 
         const newFromBal = parseFloat(fromAcc.balance) - amt;
-        const newToBal = parseFloat(toAcc.balance) + amt;
-
         await db.query('UPDATE accounts SET balance = $1 WHERE id = $2', [newFromBal, fromAcc.id]);
-        await db.query('UPDATE accounts SET balance = $1 WHERE id = $2', [newToBal, toAcc.id]);
 
-        // record transactions for each side
         const now = new Date();
         await db.query(
             `INSERT INTO transactions (account_id, transaction_type, amount, description, balance_after, created_at)
              VALUES ($1, $2, $3, $4, $5, $6)`,
             [fromAcc.id, 'Debit', amt, description || `Transfer to ${toAccount}`, newFromBal, now]
         );
-        await db.query(
-            `INSERT INTO transactions (account_id, transaction_type, amount, description, balance_after, created_at)
-             VALUES ($1, $2, $3, $4, $5, $6)`,
-            [toAcc.id, 'Credit', amt, description || `Transfer from ${fromAccount}`, newToBal, now]
-        );
+
+        let newToBal = null;
+        if (toAcc) {
+            newToBal = parseFloat(toAcc.balance) + amt;
+            await db.query('UPDATE accounts SET balance = $1 WHERE id = $2', [newToBal, toAcc.id]);
+            await db.query(
+                `INSERT INTO transactions (account_id, transaction_type, amount, description, balance_after, created_at)
+                 VALUES ($1, $2, $3, $4, $5, $6)`,
+                [toAcc.id, 'Credit', amt, description || `Transfer from ${fromAccount}`, newToBal, now]
+            );
+        }
 
         await db.query('COMMIT');
 
@@ -565,10 +566,12 @@ app.post('/api/transfer', requireCustomerAuth, async (req, res) => {
         try {
             await db.query(`INSERT INTO notifications (username, message, type) VALUES ($1, $2, $3)`, [req.user.username, `You successfully transferred $${amt.toFixed(2)} to account ${toAccount}.`, 'transfer']);
             
-            // Lookup receiver username
-            const toUserRes = await db.query('SELECT username FROM registrations WHERE id = $1', [toAcc.registration_id]);
-            if (toUserRes.rows[0]) {
-                await db.query(`INSERT INTO notifications (username, message, type) VALUES ($1, $2, $3)`, [toUserRes.rows[0].username, `You received a transfer of $${amt.toFixed(2)} from account ${fromAccount}.`, 'transfer']);
+            // Lookup receiver username if internal account
+            if (toAcc) {
+                const toUserRes = await db.query('SELECT username FROM registrations WHERE id = $1', [toAcc.registration_id]);
+                if (toUserRes.rows[0]) {
+                    await db.query(`INSERT INTO notifications (username, message, type) VALUES ($1, $2, $3)`, [toUserRes.rows[0].username, `You received a transfer of $${amt.toFixed(2)} from account ${fromAccount}.`, 'transfer']);
+                }
             }
         } catch (notifErr) {
             console.error('Failed to create transfer notifications:', notifErr);

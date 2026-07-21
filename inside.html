@@ -36,16 +36,16 @@
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
         <nav id="navmenu" class="navmenu">
             <ul>
-                <li><a href="personal.html" class="active text-white">Personal</a></li>
-                <li><a href="private.html" class="text-white">Private</a></li>
-                <li><a href="business.html" class="text-white">Business</a></li>
-                <li><a href="corporate.html" class="text-white">Corporate</a></li>
+                <li><a href="inside" class="text-white">Dashboard</a></li>
+                <li><a href="transfer" class="text-white">Transfer</a></li>
+                <li><a href="pay-bill" class="text-white">Pay Bills</a></li>
+                <li><a href="statements" class="text-white">Statements</a></li>
+                <li><a href="account-settings" class="text-white">Settings</a></li>
             </ul>
         </nav>
 
         <div class="ms-auto d-flex align-items-center">
-              <a class="btn-getstarted" href="index.html">Home</a>
-              <a class="btn-getstarted" href="customer-support.html">Contact</a>
+              
               
               <div class="dropdown d-inline-block ms-2 me-2">
                 <a class="nav-link position-relative" href="#" role="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 8px 15px; border-radius: 4px; display: inline-flex; align-items: center;">
@@ -67,7 +67,7 @@
   <header id="header" class="header align-items-center">
     <div class="container-fluid container-xl position-relative d-flex align-items-center">
 
-      <a href="index.html" class="logo d-flex align-items-center me-auto">
+      <a href="index" class="logo d-flex align-items-center me-auto">
         <img src="img/logo.png" alt="" class="img-fluid" >
         <h4 class="pt-3 fw-bold" style="color: red;">Santander</h4>
       </a>
@@ -103,10 +103,10 @@
                     <div class="card-body p-4">
                         <h5 class="card-title fw-bold mb-3">Quick Actions</h5>
                         <div class="d-grid gap-2">
-                            <button class="btn btn-outline-danger text-start" type="button" onclick="location.href='pay-bill.html'"><i class="bi bi-arrow-right-circle me-2"></i> Pay a bill</button>
-                            <button class="btn btn-outline-danger text-start" type="button" onclick="location.href='transfer.html'"><i class="bi bi-arrow-left-right me-2"></i> Transfer between accounts</button>
-                            <button class="btn btn-outline-danger text-start" type="button" onclick="location.href='statements.html'"><i class="bi bi-file-earmark-text me-2"></i> View statements</button>
-                            <button class="btn btn-outline-danger text-start" type="button" onclick="location.href='account-settings.html'"><i class="bi bi-gear me-2"></i> Account settings</button>
+                            <button class="btn btn-outline-danger text-start" type="button" onclick="location.href='pay-bill'"><i class="bi bi-arrow-right-circle me-2"></i> Pay a bill</button>
+                            <button class="btn btn-outline-danger text-start" type="button" onclick="location.href='transfer'"><i class="bi bi-arrow-left-right me-2"></i> Transfer between accounts</button>
+                            <button class="btn btn-outline-danger text-start" type="button" onclick="location.href='statements'"><i class="bi bi-file-earmark-text me-2"></i> View statements</button>
+                            <button class="btn btn-outline-danger text-start" type="button" onclick="location.href='account-settings'"><i class="bi bi-gear me-2"></i> Account settings</button>
                         </div>
                     </div>
                 </div>
@@ -172,7 +172,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const userStr = localStorage.getItem('santander_user');
         if (!userStr) {
-            window.location.href = 'login.html';
+            window.location.href='login';
             return;
         }
 
@@ -239,7 +239,7 @@
                                 <hr>
                                 <div class="d-flex gap-3">
                                     <a href="transactions.html?account=${account.account_number}" class="text-decoration-none" style="color: red;">View transactions</a>
-                                    <a href="make-payment.html" class="text-decoration-none" style="color: red;">Make a payment</a>
+                                    <a href="make-payment" class="text-decoration-none" style="color: red;">Make a payment</a>
                                 </div>
                             </div>
                         </div>
@@ -255,7 +255,7 @@
 
     function logout() {
         localStorage.removeItem('santander_user');
-        window.location.href = 'index.html';
+        window.location.href='index';
     }
   </script>
 
