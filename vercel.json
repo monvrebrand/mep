@@ -1,7 +1,133 @@
 {
   "version": 2,
-  "cleanUrls": true,
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.js" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
+      "source": "/account-settings",
+      "destination": "/account-settings.html"
+    },
+    {
+      "source": "/admin-login",
+      "destination": "/admin-login.html"
+    },
+    {
+      "source": "/admin-messages",
+      "destination": "/admin-messages.html"
+    },
+    {
+      "source": "/application-under-review",
+      "destination": "/application-under-review.html"
+    },
+    {
+      "source": "/business-accounts",
+      "destination": "/business-accounts.html"
+    },
+    {
+      "source": "/business-credit-cards",
+      "destination": "/business-credit-cards.html"
+    },
+    {
+      "source": "/business-loans",
+      "destination": "/business-loans.html"
+    },
+    {
+      "source": "/business",
+      "destination": "/business.html"
+    },
+    {
+      "source": "/chat",
+      "destination": "/chat.html"
+    },
+    {
+      "source": "/corporate",
+      "destination": "/corporate.html"
+    },
+    {
+      "source": "/credit-cards",
+      "destination": "/credit-cards.html"
+    },
+    {
+      "source": "/current-accounts",
+      "destination": "/current-accounts.html"
+    },
+    {
+      "source": "/customer-support",
+      "destination": "/customer-support.html"
+    },
+    {
+      "source": "/forgotten-details",
+      "destination": "/forgotten-details.html"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/index",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/inside",
+      "destination": "/inside.html"
+    },
+    {
+      "source": "/insurance",
+      "destination": "/insurance.html"
+    },
+    {
+      "source": "/loans",
+      "destination": "/loans.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/login.html"
+    },
+    {
+      "source": "/make-payment",
+      "destination": "/make-payment.html"
+    },
+    {
+      "source": "/mortages",
+      "destination": "/mortages.html"
+    },
+    {
+      "source": "/mortgages",
+      "destination": "/mortgages.html"
+    },
+    {
+      "source": "/pay-bill",
+      "destination": "/pay-bill.html"
+    },
+    {
+      "source": "/personal",
+      "destination": "/personal.html"
+    },
+    {
+      "source": "/private",
+      "destination": "/private.html"
+    },
+    {
+      "source": "/register",
+      "destination": "/register.html"
+    },
+    {
+      "source": "/savings-isas",
+      "destination": "/savings-isas.html"
+    },
+    {
+      "source": "/statements",
+      "destination": "/statements.html"
+    },
+    {
+      "source": "/transactions",
+      "destination": "/transactions.html"
+    },
+    {
+      "source": "/transfer",
+      "destination": "/transfer.html"
+    }
   ]
 }
