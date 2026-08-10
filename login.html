@@ -87,9 +87,14 @@
                   </div>
 
                   <!-- Password -->
-                  <div class="form-floating mb-4">
-                    <input type="password" class="form-control" id="password" placeholder="Password">
-                    <label for="password">Password</label>
+                  <div class="input-group mb-4">
+                    <div class="form-floating flex-grow-1">
+                      <input type="password" class="form-control border-end-0" id="password" placeholder="Password" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                      <label for="password">Password</label>
+                    </div>
+                    <span class="input-group-text bg-white toggle-password" data-target="password" style="cursor: pointer; border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                      <i class="bi bi-eye"></i>
+                    </span>
                   </div>
 
                   <!-- Log on Button -->
@@ -188,6 +193,24 @@
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       AOS.init();
+
+      // Password toggle logic
+      document.querySelectorAll('.toggle-password').forEach(toggle => {
+        toggle.addEventListener('click', function() {
+          const targetId = this.getAttribute('data-target');
+          const input = document.getElementById(targetId);
+          const icon = this.querySelector('i');
+          if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+          } else {
+            input.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+          }
+        });
+      });
     });
 
     async function handleLogin(event) {

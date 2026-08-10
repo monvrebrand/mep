@@ -125,11 +125,21 @@
                 <h6 class="fw-bold mb-3">Change password</h6>
                 <div class="mb-3">
                   <label for="oldPassword" class="form-label fw-semibold">Current password</label>
-                  <input type="password" class="form-control" id="oldPassword" placeholder="Required to change password">
+                  <div class="input-group">
+                    <input type="password" class="form-control border-end-0" id="oldPassword" placeholder="Required to change password">
+                    <span class="input-group-text bg-white toggle-password" data-target="oldPassword" style="cursor: pointer;">
+                      <i class="bi bi-eye"></i>
+                    </span>
+                  </div>
                 </div>
                 <div class="mb-4">
                   <label for="password" class="form-label fw-semibold">New password</label>
-                  <input type="password" class="form-control" id="password" placeholder="Leave blank to keep current">
+                  <div class="input-group">
+                    <input type="password" class="form-control border-end-0" id="password" placeholder="Leave blank to keep current">
+                    <span class="input-group-text bg-white toggle-password" data-target="password" style="cursor: pointer;">
+                      <i class="bi bi-eye"></i>
+                    </span>
+                  </div>
                 </div>
 
                 <!-- Submit button -->
@@ -236,6 +246,24 @@
       if (typeof AOS !== 'undefined') {
         AOS.init();
       }
+
+      // Password toggle logic
+      document.querySelectorAll('.toggle-password').forEach(toggle => {
+        toggle.addEventListener('click', function() {
+          const targetId = this.getAttribute('data-target');
+          const input = document.getElementById(targetId);
+          const icon = this.querySelector('i');
+          if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+          } else {
+            input.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+          }
+        });
+      });
 
       const userStr = localStorage.getItem('santander_user');
       if (!userStr) {
