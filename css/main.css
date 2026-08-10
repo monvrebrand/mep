@@ -324,7 +324,7 @@ h6 {
     display: none;
     list-style: none;
     position: absolute;
-    inset: 60px 20px 20px 20px;
+    inset: 60px 20px auto 20px; /* Adjust height to fit the links rather than stretching to bottom */
     padding: 10px 0;
     margin: 0;
     border-radius: 6px;
