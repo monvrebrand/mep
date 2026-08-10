@@ -350,6 +350,11 @@ h6 {
     transition: 0.3s;
   }
 
+  .navmenu a.text-white,
+  .navmenu a.text-white:focus {
+    color: var(--nav-dropdown-color) !important;
+  }
+
   .navmenu a i,
   .navmenu a:focus i {
     font-size: 12px;
