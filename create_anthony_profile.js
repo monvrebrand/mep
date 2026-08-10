@@ -14,7 +14,7 @@ async function createProfile() {
         
         // Account 1: Trust Account
         const trustBalance = 67999950.00;
-        const trustType = 'Trust Account';
+        const trustType = 'Trust Fund';
 
         // 1. Hash Password
         const salt = await bcrypt.genSalt(10);
