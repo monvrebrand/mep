@@ -143,7 +143,7 @@
     <!-- Grid container -->
     <div class="container">
       <p class="mt-5">
-        Santander Bank (Schweiz) AG. Registered Office: Stockerstrasse 33, 8002 Zurich, Switzerland. Incorporated in Switzerland and registered with the Commercial Register of the Canton of Zurich. Authorised and supervised by the Swiss Financial Market Supervisory Authority (FINMA). www.santander.ch. Santander and the flame logo are registered trademarks of Banco Santander, S.A. and are used under licence.
+        Santander Bank, N.A. Headquarters: 75 State Street, Boston, MA 02109, United States. Member FDIC. Equal Housing Lender. Santander Bank, N.A. is a nationally chartered bank organized under the laws of the United States with its main office in Boston, Massachusetts. Supervised by the Office of the Comptroller of the Currency (OCC). www.santanderbank.com. Santander and the flame logo are registered trademarks of Banco Santander, S.A. and are used under license.
       </p>
     </div>
     <!-- Grid container -->
@@ -215,7 +215,7 @@
                 container.innerHTML = await Promise.all(data.accounts.map(async account => {
                     const formatter = new Intl.NumberFormat('de-CH', {
                         style: 'currency',
-                        currency: 'CHF',
+                        currency: 'USD',
                     });
                     
                     const isSavings = account.account_type.toLowerCase().includes('savings');

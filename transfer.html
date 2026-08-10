@@ -81,7 +81,7 @@
                               </select>
                           </div>
                           <div class="mb-3">
-                              <label for="amount" class="form-label">Amount (CHF)</label>
+                              <label for="amount" class="form-label">Amount (USD)</label>
                               <input type="number" step="0.01" min="0" class="form-control" id="amount" required>
                           </div>
                           <div class="mb-3">
@@ -113,7 +113,7 @@
         const toSel=document.getElementById('toAccount');
         ddata.accounts.forEach(acc=>{
           const o1=document.createElement('option');o1.value=acc.account_number;
-          o1.textContent=`${acc.account_type} - ${acc.account_number} (${new Intl.NumberFormat('en-GB',{style:'currency',currency:'CHF'}).format(acc.balance)})`;
+          o1.textContent=`${acc.account_type} - ${acc.account_number} (${new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(acc.balance)})`;
           const o2=o1.cloneNode(true);
           fromSel.appendChild(o1);
           toSel.appendChild(o2);
@@ -131,7 +131,7 @@
       try{
         const res=await fetch('/api/transfer',{method:'POST',headers: { 'Content-Type':'application/json', 'Authorization': `Bearer ${localStorage.getItem('customerToken')}` },body:JSON.stringify({fromAccount:from,toAccount:to,amount:amt,description:desc})});
         const data=await res.json();
-        if(data.success){out.innerHTML=`<div class="alert alert-success">Transfer complete. New balance: CHF ${data.fromBalance.toFixed(2)}</div>`;setTimeout(()=>location.reload(),1500);}else{out.innerHTML=`<div class="alert alert-danger">${data.message}</div>`;}
+        if(data.success){out.innerHTML=`<div class="alert alert-success">Transfer complete. New balance: USD ${data.fromBalance.toFixed(2)}</div>`;setTimeout(()=>location.reload(),1500);}else{out.innerHTML=`<div class="alert alert-danger">${data.message}</div>`;}
       }catch(err){console.error(err);out.innerHTML='<div class="alert alert-danger">Error sending transfer.</div>';}    
     });
   });
