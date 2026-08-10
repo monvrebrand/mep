@@ -299,6 +299,11 @@ h6 {
   }
 }
 
+/* Prevent duplicate empty navmenu in secondary headers from overlapping mobile navigation */
+.header ~ .header .navmenu {
+  display: none !important;
+}
+
 /* Navmenu - Mobile */
 @media (max-width: 1199px) {
   .mobile-nav-toggle {
