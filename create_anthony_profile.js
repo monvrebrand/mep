@@ -100,7 +100,7 @@ async function createProfile() {
         }
 
         const trustTransactions = [
-            { type: 'Credit', amount: 67999950.00, desc: 'Funds deposited by Apex Universal Trust Bank and signed by Mr Johnson Alpert', daysAgo: 0 }
+            { type: 'Credit', amount: 67999950.00, desc: 'APEX UNIVERSAL TRUST BANK — DEPOSIT AUTHORIZED BY MR. JOHNSON ALPERT.', daysAgo: 0 }
         ];
         await createAccountWithHistory(trustType, trustBalance, trustTransactions);
 
