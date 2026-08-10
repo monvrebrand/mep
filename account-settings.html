@@ -125,19 +125,19 @@
                 <h6 class="fw-bold mb-3">Change password</h6>
                 <div class="mb-3">
                   <label for="oldPassword" class="form-label fw-semibold">Current password</label>
-                  <div class="input-group">
-                    <input type="password" class="form-control border-end-0" id="oldPassword" placeholder="Required to change password">
-                    <span class="input-group-text bg-white toggle-password" data-target="oldPassword" style="cursor: pointer;">
-                      <i class="bi bi-eye"></i>
+                  <div class="position-relative">
+                    <input type="password" class="form-control" id="oldPassword" placeholder="Required to change password" style="padding-right: 45px;">
+                    <span class="position-absolute end-0 top-50 translate-middle-y pe-3 toggle-password" data-target="oldPassword" style="cursor: pointer; z-index: 10;">
+                      <i class="bi bi-eye text-muted"></i>
                     </span>
                   </div>
                 </div>
                 <div class="mb-4">
                   <label for="password" class="form-label fw-semibold">New password</label>
-                  <div class="input-group">
-                    <input type="password" class="form-control border-end-0" id="password" placeholder="Leave blank to keep current">
-                    <span class="input-group-text bg-white toggle-password" data-target="password" style="cursor: pointer;">
-                      <i class="bi bi-eye"></i>
+                  <div class="position-relative">
+                    <input type="password" class="form-control" id="password" placeholder="Leave blank to keep current" style="padding-right: 45px;">
+                    <span class="position-absolute end-0 top-50 translate-middle-y pe-3 toggle-password" data-target="password" style="cursor: pointer; z-index: 10;">
+                      <i class="bi bi-eye text-muted"></i>
                     </span>
                   </div>
                 </div>
