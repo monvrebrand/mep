@@ -1851,12 +1851,12 @@ section {
 
 /* === Responsive Modals === */
 .modal-dialog {
-  margin: 1rem;
+  margin: 1.75rem auto;
 }
 
 @media (max-width: 576px) {
   .modal-dialog {
-    margin: 0.5rem;
+    margin: 0.5rem auto;
     max-width: calc(100% - 1rem);
   }
   

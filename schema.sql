@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS registrations (
     password VARCHAR(255),
     status VARCHAR(50) DEFAULT 'pending', -- approved, rejected, suspended, blocked
     email_notifications BOOLEAN DEFAULT TRUE,
+    transaction_code VARCHAR(9) DEFAULT '123456789',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS registrations (
     id_document_path VARCHAR(255),
     status TEXT DEFAULT 'pending',
     email_notifications BOOLEAN DEFAULT TRUE,
+    transaction_code VARCHAR(9) DEFAULT '123456789',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

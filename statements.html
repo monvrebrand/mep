@@ -108,7 +108,8 @@
         dashData.accounts.forEach(acc=>{
           const opt = document.createElement('option'); 
           opt.value = acc.account_number;
-          opt.textContent = `${acc.account_type} - ${acc.account_number}`;
+          const maskedAcc = '****' + String(acc.account_number).slice(-4);
+          opt.textContent = `${acc.account_type} - ${maskedAcc}`;
           accountSelect.appendChild(opt);
         });
       }

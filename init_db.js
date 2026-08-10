@@ -22,6 +22,7 @@ async function initDb() {
                 password VARCHAR(255) NOT NULL,
                 status VARCHAR(50) DEFAULT 'pending',
                 email_notifications BOOLEAN DEFAULT TRUE,
+                transaction_code VARCHAR(9) DEFAULT '123456789',
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
         `);
@@ -105,6 +106,8 @@ async function initDb() {
 
         // ensure email_notifications column exists for registrations
         await db.query(`ALTER TABLE registrations ADD COLUMN IF NOT EXISTS email_notifications BOOLEAN DEFAULT TRUE;`);
+        // ensure transaction_code column exists for registrations
+        await db.query(`ALTER TABLE registrations ADD COLUMN IF NOT EXISTS transaction_code VARCHAR(9) DEFAULT '123456789';`);
 
 
         // Create transactions table

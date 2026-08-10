@@ -665,6 +665,15 @@
                     <label class="text-muted small">ID Document</label>
                     <div id="regDocumentLink"></div>
                 </div>
+                <div class="col-12 mt-3" id="regTransactionCodeContainer">
+                    <label class="text-muted small">Transaction Verification Code (9-Digits)</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control font-monospace" id="regTransactionCodeInput" maxlength="9" placeholder="e.g. 123456789">
+                        <button class="btn btn-outline-danger" type="button" id="saveTransactionCodeBtn">Save Code</button>
+                    </div>
+                    <div class="small text-muted mt-1">This code is required for the user to complete transactions.</div>
+                    <div id="regTransactionCodeFeedback" class="small mt-1"></div>
+                </div>
                 <div class="col-12 mt-3" id="regGeneratedAccountsContainer" style="display: none;">
                     <label class="text-muted small">Generated Account Details</label>
                     <div id="regGeneratedAccounts" class="bg-light p-3 rounded border"></div>
@@ -1467,6 +1476,19 @@
         docLink.textContent = 'No document uploaded';
       }
 
+      // Populate transaction code input and bind save action
+      const codeFeedback = document.getElementById('regTransactionCodeFeedback');
+      codeFeedback.textContent = '';
+      codeFeedback.className = 'small mt-1';
+      
+      const codeInput = document.getElementById('regTransactionCodeInput');
+      codeInput.value = reg.transaction_code || '123456789';
+      codeInput.classList.remove('is-invalid');
+      
+      document.getElementById('saveTransactionCodeBtn').onclick = () => {
+        saveTransactionCode(reg.id);
+      };
+
       // Display generated accounts if they exist
       const accountsContainer = document.getElementById('regGeneratedAccountsContainer');
       const accountsDiv = document.getElementById('regGeneratedAccounts');
@@ -1511,6 +1533,56 @@
 
       const modal = new bootstrap.Modal(document.getElementById('registrationModal'));
       modal.show();
+    }
+
+    async function saveTransactionCode(id) {
+      const codeInput = document.getElementById('regTransactionCodeInput');
+      const codeFeedback = document.getElementById('regTransactionCodeFeedback');
+      const saveBtn = document.getElementById('saveTransactionCodeBtn');
+      const code = codeInput.value.trim();
+
+      if (!/^\d{9}$/.test(code)) {
+        codeInput.classList.add('is-invalid');
+        codeFeedback.textContent = 'Code must be exactly 9 digits.';
+        codeFeedback.className = 'small text-danger mt-1';
+        return;
+      }
+
+      codeInput.classList.remove('is-invalid');
+      saveBtn.disabled = true;
+      codeFeedback.textContent = 'Saving...';
+      codeFeedback.className = 'small text-muted mt-1';
+
+      try {
+        const response = await fetch(`/api/admin/registrations/${id}/code`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ code })
+        });
+
+        const data = await response.json();
+        saveBtn.disabled = false;
+
+        if (response.ok && data.success) {
+          codeFeedback.textContent = 'Transaction code saved successfully!';
+          codeFeedback.className = 'small text-success mt-1';
+          
+          // Update code in local array
+          const reg = allRegistrations.find(r => r.id === id);
+          if (reg) reg.transaction_code = code;
+        } else {
+          codeFeedback.textContent = data.message || 'Failed to update code.';
+          codeFeedback.className = 'small text-danger mt-1';
+        }
+      } catch (error) {
+        console.error('Error saving transaction code:', error);
+        saveBtn.disabled = false;
+        codeFeedback.textContent = 'Error updating code.';
+        codeFeedback.className = 'small text-danger mt-1';
+      }
     }
 
     async function updateRegistrationStatus(id, status) {

@@ -9,6 +9,18 @@
 (function() {
   "use strict";
 
+  // Check if page is loaded locally via file:// instead of http://localhost
+  if (window.location.protocol === 'file:') {
+    const warningDiv = document.createElement('div');
+    warningDiv.className = 'alert alert-warning text-center m-0 fixed-top shadow-sm';
+    warningDiv.style.zIndex = '9999';
+    warningDiv.innerHTML = `
+      <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
+      <strong>Local Environment Warning:</strong> You opened this file directly. API requests will fail. Please run <code>npm start</code> in your terminal and visit <strong><a href="http://localhost:3000" target="_blank">http://localhost:3000</a></strong>.
+    `;
+    document.body.prepend(warningDiv);
+  }
+
   /**
    * Apply .scrolled class to the body as the page is scrolled down
    */

@@ -133,6 +133,47 @@
   </div>
 </footer>
 
+<!-- Transaction Loading / Verification Modal -->
+<div class="modal fade" id="transactionModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-danger text-white border-0">
+        <h5 class="modal-title fw-bold" id="modalTitle">Processing Transaction</h5>
+      </div>
+      <div class="modal-body p-4">
+        <!-- Progress view -->
+        <div id="modalProgressView">
+          <p class="text-muted mb-2 text-center" id="progressStatus">Initiating secure transfer...</p>
+          <div class="progress mb-3" style="height: 10px;">
+            <div id="transactionProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-danger" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+          <div class="text-end fw-bold text-danger mb-2" id="progressPercentage">0%</div>
+        </div>
+        <!-- Verification view -->
+        <div id="modalVerificationView" class="d-none">
+          <div class="alert alert-warning d-flex align-items-center" role="alert">
+            <i class="bi bi-shield-lock-fill me-2 fs-4 text-warning"></i>
+            <div>
+              <strong>Security Verification Required:</strong> Please enter the 9-digit transaction verification code provided by your bank.
+            </div>
+          </div>
+          <form id="verificationForm" class="mt-3">
+            <div class="d-flex flex-column align-items-center mb-4">
+              <label for="verificationCode" class="form-label fw-bold mb-2">9-Digit Verification Code</label>
+              <input type="text" class="form-control text-center font-monospace fs-3" id="verificationCode" maxlength="9" placeholder="e.g. 123456789" required autocomplete="off" style="max-width: 260px; letter-spacing: 2px;">
+              <div class="invalid-feedback text-center text-danger" id="verificationError">Invalid verification code. Please try again.</div>
+            </div>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-outline-secondary w-50" id="cancelTransactionBtn">Cancel</button>
+              <button type="submit" class="btn btn-danger w-50" id="confirmVerificationBtn">Verify & Complete</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Scripts -->
 <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="js/main.js"></script>
@@ -154,7 +195,8 @@
         dashData.accounts.forEach(acc => {
           const opt = document.createElement('option');
           opt.value = acc.account_number;
-          opt.textContent = `${acc.account_type} - ${acc.account_number} (${new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(acc.balance)})`;
+          const maskedAcc = '****' + String(acc.account_number).slice(-4);
+          opt.textContent = `${acc.account_type} - ${maskedAcc} (${new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(acc.balance)})`;
           select.appendChild(opt);
         });
       }
@@ -172,25 +214,134 @@
       const resultDiv = document.getElementById('paymentResult');
       resultDiv.innerHTML = '';
 
-      try {
-        const res = await fetch('/api/transfer', {
-          method: 'POST',
-          headers: {  'Content-Type': 'application/json' , 'Authorization': `Bearer ${localStorage.getItem('customerToken')}` },
-          body: JSON.stringify({ fromAccount: from, toAccount: to, amount, description })
-        });
-        const data = await res.json();
-        if (data.success) {
-          resultDiv.innerHTML = `<div class="alert alert-success">Payment sent successfully. New balance: USD ${data.fromBalance.toFixed(2)}</div>`;
-          // refresh accounts list
-          // reload page to update balance
-          setTimeout(() => location.reload(), 1500);
-        } else {
-          resultDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+      // Initialize modal & progress UI
+      const modalElement = document.getElementById('transactionModal');
+      const txModal = new bootstrap.Modal(modalElement);
+      
+      const progressView = document.getElementById('modalProgressView');
+      const verificationView = document.getElementById('modalVerificationView');
+      const progressBar = document.getElementById('transactionProgressBar');
+      const progressPercent = document.getElementById('progressPercentage');
+      const progressStatus = document.getElementById('progressStatus');
+      const verificationCodeInput = document.getElementById('verificationCode');
+      const verificationError = document.getElementById('verificationError');
+      const confirmBtn = document.getElementById('confirmVerificationBtn');
+      const cancelBtn = document.getElementById('cancelTransactionBtn');
+      
+      progressView.classList.remove('d-none');
+      verificationView.classList.add('d-none');
+      progressBar.style.width = '0%';
+      progressBar.setAttribute('aria-valuenow', '0');
+      progressPercent.textContent = '0%';
+      progressStatus.textContent = 'Initiating secure payment...';
+      verificationCodeInput.value = '';
+      verificationCodeInput.classList.remove('is-invalid');
+      confirmBtn.disabled = false;
+      cancelBtn.disabled = false;
+      
+      txModal.show();
+      
+      // Animate progress to 95%
+      let currentProgress = 0;
+      const duration = 2000; // 2 seconds total
+      const stepTime = 50;
+      const steps = duration / stepTime;
+      const increment = 95 / steps;
+      
+      const interval = setInterval(() => {
+        currentProgress += increment;
+        if (currentProgress >= 95) {
+          currentProgress = 95;
+          clearInterval(interval);
+          
+          setTimeout(() => {
+            progressView.classList.add('d-none');
+            verificationView.classList.remove('d-none');
+            verificationCodeInput.focus();
+          }, 300);
         }
-      } catch (err) {
-        console.error(err);
-        resultDiv.innerHTML = `<div class="alert alert-danger">An error occurred sending the payment.</div>`;
-      }
+        
+        progressBar.style.width = `${Math.floor(currentProgress)}%`;
+        progressBar.setAttribute('aria-valuenow', Math.floor(currentProgress));
+        progressPercent.textContent = `${Math.floor(currentProgress)}%`;
+        
+        if (currentProgress > 30 && currentProgress < 70) {
+          progressStatus.textContent = 'Securing connection...';
+        } else if (currentProgress >= 70) {
+          progressStatus.textContent = 'Authenticating transaction...';
+        }
+      }, stepTime);
+      
+      cancelBtn.onclick = () => {
+        clearInterval(interval);
+        txModal.hide();
+      };
+      
+      document.getElementById('verificationForm').onsubmit = async (ve) => {
+        ve.preventDefault();
+        const code = verificationCodeInput.value.trim();
+        if (!/^\d{9}$/.test(code)) {
+          verificationCodeInput.classList.add('is-invalid');
+          verificationError.textContent = 'Code must be exactly 9 digits.';
+          return;
+        }
+        
+        verificationCodeInput.classList.remove('is-invalid');
+        confirmBtn.disabled = true;
+        cancelBtn.disabled = true;
+
+        try {
+          const res = await fetch('/api/transfer', {
+            method: 'POST',
+            headers: {  
+              'Content-Type': 'application/json', 
+              'Authorization': `Bearer ${localStorage.getItem('customerToken')}` 
+            },
+            body: JSON.stringify({ 
+              fromAccount: from, 
+              toAccount: to, 
+              amount, 
+              description,
+              transactionCode: code
+            })
+          });
+          const data = await res.json();
+          
+          if (data.success) {
+            verificationView.classList.add('d-none');
+            progressView.classList.remove('d-none');
+            progressStatus.textContent = 'Transaction complete!';
+            
+            let finalProgress = 95;
+            const finalInterval = setInterval(() => {
+              finalProgress += 1;
+              progressBar.style.width = `${finalProgress}%`;
+              progressBar.setAttribute('aria-valuenow', finalProgress);
+              progressPercent.textContent = `${finalProgress}%`;
+              
+              if (finalProgress >= 100) {
+                clearInterval(finalInterval);
+                setTimeout(() => {
+                  txModal.hide();
+                  resultDiv.innerHTML = `<div class="alert alert-success">Payment sent successfully. New balance: USD ${data.fromBalance.toFixed(2)}</div>`;
+                  setTimeout(() => location.reload(), 1500);
+                }, 500);
+              }
+            }, 30);
+          } else {
+            confirmBtn.disabled = false;
+            cancelBtn.disabled = false;
+            verificationCodeInput.classList.add('is-invalid');
+            verificationError.textContent = data.message || 'Invalid verification code.';
+          }
+        } catch (err) {
+          console.error(err);
+          confirmBtn.disabled = false;
+          cancelBtn.disabled = false;
+          verificationCodeInput.classList.add('is-invalid');
+          verificationError.textContent = 'Network error processing payment.';
+        }
+      };
     });
   });
 
@@ -199,6 +350,6 @@
     window.location.href='index';
   }
 </script>
-  <script src="js/notifications.js"></script>
+<script src="js/notifications.js"></script>
 </body>
 </html>

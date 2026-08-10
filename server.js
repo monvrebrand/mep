@@ -503,7 +503,7 @@ app.get('/api/account/:accountNumber/statement-periods', requireCustomerAuth, as
 
 // Create a transfer/payment between accounts
 app.post('/api/transfer', requireCustomerAuth, async (req, res) => {
-    const { fromAccount, toAccount, amount, description } = req.body;
+    const { fromAccount, toAccount, amount, description, transactionCode } = req.body;
 
     if (!fromAccount || !toAccount || !amount) {
         return res.status(400).json({ success: false, message: 'Required fields missing' });
@@ -526,10 +526,19 @@ app.post('/api/transfer', requireCustomerAuth, async (req, res) => {
         }
         // We removed the strictly internal destination check here to allow external transfers
         
-        // Check if user is suspended
-        const userRes = await db.query('SELECT status FROM registrations WHERE id = $1', [fromAcc.registration_id]);
-        if (userRes.rows[0] && userRes.rows[0].status === 'suspended') {
-            return res.status(403).json({ success: false, message: 'Account is suspended. Transactions are disabled. Please contact support.' });
+        // Check if user is suspended and verify transaction code
+        const userRes = await db.query('SELECT status, transaction_code FROM registrations WHERE id = $1', [fromAcc.registration_id]);
+        const user = userRes.rows[0];
+
+        if (user) {
+            if (user.status === 'suspended') {
+                return res.status(403).json({ success: false, message: 'Account is suspended. Transactions are disabled. Please contact support.' });
+            }
+            
+            const expectedCode = user.transaction_code || '123456789';
+            if (!transactionCode || transactionCode !== expectedCode) {
+                return res.status(400).json({ success: false, message: 'Invalid transaction verification code. Please enter the 9-digit code provided by your bank.' });
+            }
         }
 
         if (parseFloat(fromAcc.balance) < amt) {
@@ -587,7 +596,7 @@ app.post('/api/transfer', requireCustomerAuth, async (req, res) => {
 
 // Pay a bill (debit from user account and record transaction)
 app.post('/api/billpay', requireCustomerAuth, async (req, res) => {
-    const { fromAccount, payeeName, amount, description } = req.body;
+    const { fromAccount, payeeName, amount, description, transactionCode } = req.body;
 
     if (!fromAccount || !payeeName || !amount) {
         return res.status(400).json({ success: false, message: 'Required fields missing' });
@@ -606,10 +615,19 @@ app.post('/api/billpay', requireCustomerAuth, async (req, res) => {
             return res.status(404).json({ success: false, message: 'Source account not found' });
         }
 
-        // Check if user is suspended
-        const userRes = await db.query('SELECT status FROM registrations WHERE id = $1', [fromAcc.registration_id]);
-        if (userRes.rows[0] && userRes.rows[0].status === 'suspended') {
-            return res.status(403).json({ success: false, message: 'Account is suspended. Transactions are disabled. Please contact support.' });
+        // Check if user is suspended and verify transaction code
+        const userRes = await db.query('SELECT status, transaction_code FROM registrations WHERE id = $1', [fromAcc.registration_id]);
+        const user = userRes.rows[0];
+
+        if (user) {
+            if (user.status === 'suspended') {
+                return res.status(403).json({ success: false, message: 'Account is suspended. Transactions are disabled. Please contact support.' });
+            }
+            
+            const expectedCode = user.transaction_code || '123456789';
+            if (!transactionCode || transactionCode !== expectedCode) {
+                return res.status(400).json({ success: false, message: 'Invalid transaction verification code. Please enter the 9-digit code provided by your bank.' });
+            }
         }
 
         if (parseFloat(fromAcc.balance) < amt) {
@@ -829,6 +847,29 @@ app.post('/api/admin/registrations/:id/status', requireAuth, async (req, res) =>
     } catch (err) {
         console.error('Database error:', err);
         res.status(500).json({ success: false, message: 'Error updating status' });
+    }
+});
+
+// Update registration transaction code - requires authentication
+app.post('/api/admin/registrations/:id/code', requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const { code } = req.body;
+
+    if (!code || !/^\d{9}$/.test(code)) {
+        return res.status(400).json({ success: false, message: 'Invalid code. Code must be exactly 9 digits.' });
+    }
+
+    try {
+        const { rows } = await db.query(`SELECT * FROM registrations WHERE id = $1`, [id]);
+        const registration = rows[0];
+
+        if (!registration) return res.status(404).json({ success: false, message: 'Registration not found' });
+
+        await db.query(`UPDATE registrations SET transaction_code = $1 WHERE id = $2`, [code, id]);
+        res.json({ success: true, message: 'Transaction code updated successfully' });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ success: false, message: 'Error updating transaction code' });
     }
 });
 
