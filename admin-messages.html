@@ -568,13 +568,14 @@
                 <th>Date & Time</th>
                 <th>Username</th>
                 <th>IP Address</th>
+                <th>Browser / Device (User Agent)</th>
                 <th>Status</th>
                 <th>Details / Reason</th>
               </tr>
             </thead>
             <tbody id="auditLogsList">
               <tr>
-                <td colspan="5" class="text-center text-muted py-4">
+                <td colspan="6" class="text-center text-muted py-4">
                   <div class="spinner-border text-danger spinner-border-sm me-2" role="status"></div>
                   Loading audit logs...
                 </td>
@@ -830,7 +831,7 @@
         
         if (data.success) {
           if (data.logs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No login attempts recorded yet.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No login attempts recorded yet.</td></tr>';
             return;
           }
           
@@ -842,17 +843,18 @@
                 <td class="text-muted small">${dateStr}</td>
                 <td><strong>${escapeHtml(log.username)}</strong></td>
                 <td><span class="font-monospace text-secondary">${escapeHtml(log.ip_address)}</span></td>
+                <td class="small text-secondary">${escapeHtml(log.user_agent || '-')}</td>
                 <td><span class="badge ${badgeClass} text-capitalize">${log.status}</span></td>
                 <td>${escapeHtml(log.reason || '-')}</td>
               </tr>
             `;
           }).join('');
         } else {
-          tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Error: ${data.message}</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Error: ${data.message}</td></tr>`;
         }
       } catch (err) {
         console.error(err);
-        document.getElementById('auditLogsList').innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Failed to fetch audit logs.</td></tr>';
+        document.getElementById('auditLogsList').innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Failed to fetch audit logs.</td></tr>';
       }
     }
 

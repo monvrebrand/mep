@@ -143,12 +143,16 @@ async function initDb() {
                 id SERIAL PRIMARY KEY,
                 username VARCHAR(100) NOT NULL,
                 ip_address VARCHAR(50) NOT NULL,
+                user_agent TEXT,
                 status VARCHAR(20) NOT NULL,
                 reason VARCHAR(255),
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
         `);
         console.log('Created login_audit_logs table');
+
+        // Ensure user_agent column exists for existing databases
+        await db.query(`ALTER TABLE login_audit_logs ADD COLUMN IF NOT EXISTS user_agent TEXT;`);
 
         console.log('Database initialization complete.');
         process.exit(0);

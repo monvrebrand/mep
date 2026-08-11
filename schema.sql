@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS login_audit_logs (
     id SERIAL PRIMARY KEY,
     username VARCHAR(100) NOT NULL,
     ip_address VARCHAR(50) NOT NULL,
+    user_agent TEXT,
     status VARCHAR(20) NOT NULL, -- success, failure
     reason VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

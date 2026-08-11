@@ -10,6 +10,7 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
+app.set('trust proxy', true);
 const db = require('./db');
 const PORT = process.env.PORT || 3000;
 
@@ -136,12 +137,14 @@ function requireCustomerAuth(req, res, next) {
 
 // API Routes
 
-// Helper to log login attempts to database
-async function logLoginAttempt(username, ip, status, reason) {
+// Helper to log login attempts to database (detects real client IP and browser User Agent)
+async function logLoginAttempt(username, req, status, reason) {
     try {
+        const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.ip || req.socket.remoteAddress;
+        const ua = req.headers['user-agent'] || 'unknown';
         await db.query(
-            `INSERT INTO login_audit_logs (username, ip_address, status, reason) VALUES ($1, $2, $3, $4)`,
-            [username || 'unknown', ip || 'unknown', status, reason]
+            `INSERT INTO login_audit_logs (username, ip_address, user_agent, status, reason) VALUES ($1, $2, $3, $4, $5)`,
+            [username || 'unknown', ip || 'unknown', ua, status, reason]
         );
     } catch (err) {
         console.error('Error writing login audit log:', err);
@@ -153,7 +156,7 @@ app.post('/api/admin/login', loginLimiter, async (req, res) => {
     const { username, password } = req.body;
     
     if (!username || !password) {
-        await logLoginAttempt(username, req.ip, 'failure', 'Username or password missing');
+        await logLoginAttempt(username, req, 'failure', 'Username or password missing');
         return res.status(400).json({ success: false, message: 'Username and password required' });
     }
     
@@ -163,14 +166,14 @@ app.post('/api/admin/login', loginLimiter, async (req, res) => {
     // Check credentials
     if (username === adminUsername && password === adminPassword) {
         const token = generateToken({ role: 'admin', username });
-        await logLoginAttempt(username, req.ip, 'success', 'Admin login successful');
+        await logLoginAttempt(username, req, 'success', 'Admin login successful');
         res.json({ 
             success: true, 
             message: 'Login successful',
             token: token
         });
     } else {
-        await logLoginAttempt(username, req.ip, 'failure', 'Invalid admin credentials');
+        await logLoginAttempt(username, req, 'failure', 'Invalid admin credentials');
         res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 });
@@ -257,27 +260,27 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         const user = rows[0];
 
         if (!user) {
-            await logLoginAttempt(username, req.ip, 'failure', 'User not found');
+            await logLoginAttempt(username, req, 'failure', 'User not found');
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
 
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
-            await logLoginAttempt(username, req.ip, 'failure', 'Invalid password');
+            await logLoginAttempt(username, req, 'failure', 'Invalid password');
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
         if (user.status === 'blocked') {
-            await logLoginAttempt(username, req.ip, 'failure', 'Account blocked');
+            await logLoginAttempt(username, req, 'failure', 'Account blocked');
             return res.status(401).json({ success: false, message: 'Your account has been blocked. Please contact support.' });
         }
         if (user.status !== 'approved' && user.status !== 'suspended') { 
-            await logLoginAttempt(username, req.ip, 'failure', `Account status is: ${user.status}`);
+            await logLoginAttempt(username, req, 'failure', `Account status is: ${user.status}`);
             return res.status(401).json({ success: false, message: 'Account application is pending or rejected' }); 
         }
 
         // Generate customer JWT
         const token = generateToken({ role: 'customer', username: user.username });
-        await logLoginAttempt(username, req.ip, 'success', 'Customer login successful');
+        await logLoginAttempt(username, req, 'success', 'Customer login successful');
         res.json({ 
             success: true, 
             message: 'Login successful', 
