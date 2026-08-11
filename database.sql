@@ -85,3 +85,13 @@ CREATE TABLE IF NOT EXISTS transactions (
     balance_after NUMERIC(15, 2),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Table for storing login audit logs
+CREATE TABLE IF NOT EXISTS login_audit_logs (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    ip_address VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL, -- success, failure
+    reason VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

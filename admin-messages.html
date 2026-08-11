@@ -415,6 +415,9 @@
         <button class="tab-button" onclick="switchTab('registrations')">
           <i class="bi bi-person-plus"></i> Registrations <span id="regBadge" class="unread-badge" style="display: none; margin-left: 8px;"></span>
         </button>
+        <button class="tab-button" onclick="switchTab('audit-logs')">
+          <i class="bi bi-shield-check"></i> Audit Logs
+        </button>
       </div>
 
       <!-- Contact Messages Tab -->
@@ -548,6 +551,38 @@
             </table>
         </div>
       </div> <!-- End registrations tab -->
+
+      <!-- Audit Logs Tab -->
+      <div id="audit-logs" class="tab-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+          <h4 class="fw-bold"><i class="bi bi-shield-check text-danger me-2"></i>Security Login Audit Logs</h4>
+          <button class="btn btn-outline-danger btn-sm rounded-pill" onclick="clearAuditLogs()">
+            <i class="bi bi-trash me-1"></i> Clear Audit Logs
+          </button>
+        </div>
+        
+        <div class="table-responsive bg-white p-3 rounded shadow-sm border">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Date & Time</th>
+                <th>Username</th>
+                <th>IP Address</th>
+                <th>Status</th>
+                <th>Details / Reason</th>
+              </tr>
+            </thead>
+            <tbody id="auditLogsList">
+              <tr>
+                <td colspan="5" class="text-center text-muted py-4">
+                  <div class="spinner-border text-danger spinner-border-sm me-2" role="status"></div>
+                  Loading audit logs...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div> <!-- End audit logs tab -->
 
     </div>
   </main>
@@ -767,6 +802,80 @@
         loadMessages();
       } else if (tabName === 'registrations') {
         loadRegistrations();
+      } else if (tabName === 'audit-logs') {
+        loadAuditLogs();
+      }
+    }
+
+    // Audit Logs Functions
+    async function loadAuditLogs() {
+      try {
+        const response = await fetch('/api/admin/audit-logs', {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('adminToken');
+            window.location.href='admin-login';
+            return;
+          }
+          throw new Error('Failed to load audit logs');
+        }
+
+        const data = await response.json();
+        const tbody = document.getElementById('auditLogsList');
+        
+        if (data.success) {
+          if (data.logs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No login attempts recorded yet.</td></tr>';
+            return;
+          }
+          
+          tbody.innerHTML = data.logs.map(log => {
+            const dateStr = new Date(log.created_at).toLocaleString();
+            const badgeClass = log.status === 'success' ? 'bg-success' : 'bg-danger';
+            return `
+              <tr>
+                <td class="text-muted small">${dateStr}</td>
+                <td><strong>${escapeHtml(log.username)}</strong></td>
+                <td><span class="font-monospace text-secondary">${escapeHtml(log.ip_address)}</span></td>
+                <td><span class="badge ${badgeClass} text-capitalize">${log.status}</span></td>
+                <td>${escapeHtml(log.reason || '-')}</td>
+              </tr>
+            `;
+          }).join('');
+        } else {
+          tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Error: ${data.message}</td></tr>`;
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById('auditLogsList').innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Failed to fetch audit logs.</td></tr>';
+      }
+    }
+
+    async function clearAuditLogs() {
+      if (!confirm('Are you sure you want to clear all login audit logs? This action cannot be undone.')) {
+        return;
+      }
+      try {
+        const response = await fetch('/api/admin/audit-logs', {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+        const data = await response.json();
+        if (data.success) {
+          loadAuditLogs();
+        } else {
+          alert('Failed to clear logs: ' + data.message);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to clear logs.');
       }
     }
 

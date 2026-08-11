@@ -136,11 +136,24 @@ function requireCustomerAuth(req, res, next) {
 
 // API Routes
 
+// Helper to log login attempts to database
+async function logLoginAttempt(username, ip, status, reason) {
+    try {
+        await db.query(
+            `INSERT INTO login_audit_logs (username, ip_address, status, reason) VALUES ($1, $2, $3, $4)`,
+            [username || 'unknown', ip || 'unknown', status, reason]
+        );
+    } catch (err) {
+        console.error('Error writing login audit log:', err);
+    }
+}
+
 // Admin login
-app.post('/api/admin/login', loginLimiter, (req, res) => {
+app.post('/api/admin/login', loginLimiter, async (req, res) => {
     const { username, password } = req.body;
     
     if (!username || !password) {
+        await logLoginAttempt(username, req.ip, 'failure', 'Username or password missing');
         return res.status(400).json({ success: false, message: 'Username and password required' });
     }
     
@@ -150,12 +163,14 @@ app.post('/api/admin/login', loginLimiter, (req, res) => {
     // Check credentials
     if (username === adminUsername && password === adminPassword) {
         const token = generateToken({ role: 'admin', username });
+        await logLoginAttempt(username, req.ip, 'success', 'Admin login successful');
         res.json({ 
             success: true, 
             message: 'Login successful',
             token: token
         });
     } else {
+        await logLoginAttempt(username, req.ip, 'failure', 'Invalid admin credentials');
         res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 });
@@ -242,22 +257,27 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         const user = rows[0];
 
         if (!user) {
+            await logLoginAttempt(username, req.ip, 'failure', 'User not found');
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
 
         const passwordMatch = await bcrypt.compare(password, user.password);
         if (!passwordMatch) {
+            await logLoginAttempt(username, req.ip, 'failure', 'Invalid password');
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
         if (user.status === 'blocked') {
+            await logLoginAttempt(username, req.ip, 'failure', 'Account blocked');
             return res.status(401).json({ success: false, message: 'Your account has been blocked. Please contact support.' });
         }
         if (user.status !== 'approved' && user.status !== 'suspended') { 
+            await logLoginAttempt(username, req.ip, 'failure', `Account status is: ${user.status}`);
             return res.status(401).json({ success: false, message: 'Account application is pending or rejected' }); 
         }
 
         // Generate customer JWT
         const token = generateToken({ role: 'customer', username: user.username });
+        await logLoginAttempt(username, req.ip, 'success', 'Customer login successful');
         res.json({ 
             success: true, 
             message: 'Login successful', 
@@ -270,6 +290,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         });
     } catch (err) {
         console.error('Database error:', err);
+        await logLoginAttempt(username, req.ip, 'failure', `Database error: ${err.message}`);
         res.status(500).json({ success: false, message: 'Database error' });
     }
 });
@@ -870,6 +891,30 @@ app.post('/api/admin/registrations/:id/code', requireAuth, async (req, res) => {
     } catch (err) {
         console.error('Database error:', err);
         res.status(500).json({ success: false, message: 'Error updating transaction code' });
+    }
+});
+
+// Get all login audit logs - requires authentication (admin only)
+app.get('/api/admin/audit-logs', requireAuth, async (req, res) => {
+    try {
+        const { rows } = await db.query(
+            `SELECT * FROM login_audit_logs ORDER BY created_at DESC LIMIT 500`
+        );
+        res.json({ success: true, logs: rows });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ success: false, message: 'Error retrieving login audit logs' });
+    }
+});
+
+// Clear all login audit logs - requires authentication (admin only)
+app.delete('/api/admin/audit-logs', requireAuth, async (req, res) => {
+    try {
+        await db.query(`DELETE FROM login_audit_logs`);
+        res.json({ success: true, message: 'Audit logs cleared successfully' });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ success: false, message: 'Error clearing audit logs' });
     }
 });
 

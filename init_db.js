@@ -137,6 +137,19 @@ async function initDb() {
         `);
         console.log('Created notifications table');
 
+        // Create login_audit_logs table
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS login_audit_logs (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(100) NOT NULL,
+                ip_address VARCHAR(50) NOT NULL,
+                status VARCHAR(20) NOT NULL,
+                reason VARCHAR(255),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log('Created login_audit_logs table');
+
         console.log('Database initialization complete.');
         process.exit(0);
     } catch (err) {

@@ -11,10 +11,10 @@ async function createProfile() {
         const phone = '+1 555 123 4567';
         const username = 'a.franklin';
         const password = 'Password123!';
-        
+
         // Account 1: Trust Account
         const trustBalance = 67999950.00;
-        const trustType = 'Trust Fund';
+        const trustType = 'Trust Fund Account';
 
         // 1. Hash Password
         const salt = await bcrypt.genSalt(10);
@@ -23,9 +23,9 @@ async function createProfile() {
         // 2. Create/Update Registration
         console.log('Registering user...');
         let registrationId;
-        
+
         const checkUser = await db.query('SELECT id FROM registrations WHERE username = $1 OR email = $2', [username, email]);
-        
+
         if (checkUser.rows.length > 0) {
             console.log('User already exists. Updating details...');
             registrationId = checkUser.rows[0].id;
@@ -49,12 +49,12 @@ async function createProfile() {
         // Helper function
         async function createAccountWithHistory(type, targetBalance, transactions) {
             console.log(`\nProcessing ${type}...`);
-            
+
             let accountId;
             let accountNumber;
-            
+
             const checkAccount = await db.query('SELECT id, account_number FROM accounts WHERE registration_id = $1 AND account_type = $2', [registrationId, type]);
-            
+
             if (checkAccount.rows.length > 0) {
                 console.log(`  Account exists. Resetting...`);
                 accountId = checkAccount.rows[0].id;
@@ -64,7 +64,7 @@ async function createProfile() {
             } else {
                 const randomPart = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
                 accountNumber = '742' + randomPart;
-                
+
                 const accResult = await db.query(`
                     INSERT INTO accounts (
                         registration_id, account_type, account_number, balance, created_at
@@ -77,20 +77,20 @@ async function createProfile() {
 
             console.log(`  Generating history...`);
             let runningBalance = 0;
-            
+
             // Sort oldest first
             transactions.sort((a, b) => b.daysAgo - a.daysAgo);
 
             for (const tx of transactions) {
                 const txDate = new Date();
                 txDate.setDate(txDate.getDate() - tx.daysAgo);
-                
+
                 if (tx.type === 'Credit') {
                     runningBalance += tx.amount;
                 } else {
                     runningBalance -= tx.amount;
                 }
-                
+
                 await db.query(`
                     INSERT INTO transactions (
                         account_id, transaction_type, amount, description, balance_after, created_at
@@ -100,12 +100,12 @@ async function createProfile() {
         }
 
         const trustTransactions = [
-            { type: 'Credit', amount: 67999950.00, desc: 'APEX UNIVERSAL TRUST BANK — DEPOSIT AUTHORIZED BY MR. JOHNSON ALPERT.', daysAgo: 0 }
+            { type: 'Credit', amount: 67999950.00, desc: 'Funds deposited by Apex Universal Trust Bank and signed by Mr Johnson Alpert', daysAgo: 0 }
         ];
         await createAccountWithHistory(trustType, trustBalance, trustTransactions);
 
         console.log('Profile created successfully!');
-        
+
         console.log('\n--- PROFILE DETAILS ---');
         console.log(`Name: ${firstname} ${surname}`);
         console.log(`Email: ${email}`);
@@ -113,7 +113,7 @@ async function createProfile() {
         console.log(`Password: ${password}`);
         console.log(`Phone: ${phone}`);
         console.log(`Initial Deposit: $67,999,950`);
-        
+
         process.exit(0);
     } catch (err) { console.error(err); process.exit(1); }
 }

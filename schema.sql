@@ -83,3 +83,12 @@ CREATE TABLE IF NOT EXISTS live_chat_messages (
     read_by_admin BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS login_audit_logs (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    ip_address VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL, -- success, failure
+    reason VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
