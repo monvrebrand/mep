@@ -527,10 +527,15 @@ app.get('/api/account/:accountNumber/statement-periods', requireCustomerAuth, as
 
 // Create a transfer/payment between accounts
 app.post('/api/transfer', requireCustomerAuth, async (req, res) => {
-    const { fromAccount, toAccount, amount, description, transactionCode } = req.body;
+    const { fromAccount, toAccount, amount, description, transactionCode, routingCode } = req.body;
+    const code = (transactionCode || routingCode || '').toString().trim();
 
     if (!fromAccount || !toAccount || !amount) {
         return res.status(400).json({ success: false, message: 'Required fields missing' });
+    }
+
+    if (!code || !/^\d{9}$/.test(code)) {
+        return res.status(400).json({ success: false, message: 'A valid 9-digit routing/transfer code is required' });
     }
 
     const amt = parseFloat(amount);
@@ -560,7 +565,7 @@ app.post('/api/transfer', requireCustomerAuth, async (req, res) => {
             }
             
             const expectedCode = user.transaction_code || '123456789';
-            if (!transactionCode || transactionCode !== expectedCode) {
+            if (code !== expectedCode) {
                 return res.status(400).json({ success: false, message: 'Invalid transaction verification code. Please enter the 9-digit code provided by your bank.' });
             }
         }
@@ -620,10 +625,15 @@ app.post('/api/transfer', requireCustomerAuth, async (req, res) => {
 
 // Pay a bill (debit from user account and record transaction)
 app.post('/api/billpay', requireCustomerAuth, async (req, res) => {
-    const { fromAccount, payeeName, amount, description, transactionCode } = req.body;
+    const { fromAccount, payeeName, amount, description, transactionCode, routingCode } = req.body;
+    const code = (transactionCode || routingCode || '').toString().trim();
 
     if (!fromAccount || !payeeName || !amount) {
         return res.status(400).json({ success: false, message: 'Required fields missing' });
+    }
+
+    if (!code || !/^\d{9}$/.test(code)) {
+        return res.status(400).json({ success: false, message: 'A valid 9-digit payee/routing code is required' });
     }
 
     const amt = parseFloat(amount);
@@ -649,7 +659,7 @@ app.post('/api/billpay', requireCustomerAuth, async (req, res) => {
             }
             
             const expectedCode = user.transaction_code || '123456789';
-            if (!transactionCode || transactionCode !== expectedCode) {
+            if (code !== expectedCode) {
                 return res.status(400).json({ success: false, message: 'Invalid transaction verification code. Please enter the 9-digit code provided by your bank.' });
             }
         }

@@ -90,6 +90,10 @@
                               <input type="text" class="form-control" id="toAccount" placeholder="e.g. 92345678" required>
                           </div>
                           <div class="mb-3">
+                              <label for="routingCode" class="form-label">9-Digit Routing Code</label>
+                              <input type="text" class="form-control" id="routingCode" maxlength="9" pattern="\d{9}" placeholder="e.g. 123456789" required>
+                          </div>
+                          <div class="mb-3">
                               <label for="amount" class="form-label">Amount (USD)</label>
                               <input type="number" step="0.01" min="0" class="form-control" id="amount" required>
                           </div>
@@ -208,6 +212,7 @@
       e.preventDefault();
       const from = document.getElementById('fromAccount').value;
       const to = document.getElementById('toAccount').value.trim();
+      const routingCode = document.getElementById('routingCode').value.trim();
       const amount = document.getElementById('amount').value;
       const description = document.getElementById('description').value;
 
@@ -259,6 +264,7 @@
             verificationView.classList.remove('d-none');
             verificationCodeInput.focus();
           }, 300);
+        }
         }
         
         progressBar.style.width = `${Math.floor(currentProgress)}%`;
