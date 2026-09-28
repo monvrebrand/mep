@@ -1057,52 +1057,58 @@ app.post('/api/chat/send', async (req, res) => {
                 const host = req.headers['x-forwarded-host'] || req.headers.host || `localhost:${PORT}`;
                 const adminUrl = process.env.APP_URL ? `${process.env.APP_URL}/admin-messages.html` : `${protocol}://${host}/admin-messages.html`;
 
-                transporter.sendMail({
-                    from: `"${process.env.SMTP_FROM_NAME || 'Live Chat Alert'}" <${process.env.SMTP_USER}>`,
-                    to: adminRecipient,
-                    subject: `🚨 [NEW LIVE CHAT] ${sender_name || 'Customer'} started a chat`,
-                    html: `
-                        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; background-color: #ffffff;">
-                            <div style="background-color: #dc3545; color: #ffffff; padding: 20px; text-align: center;">
-                                <h1 style="margin: 0; font-size: 22px; font-weight: bold;">🚨 New Live Chat Started</h1>
-                                <p style="margin: 6px 0 0 0; font-size: 14px; opacity: 0.95;">A customer is online waiting for your reply</p>
-                            </div>
-                            <div style="padding: 24px; color: #333333;">
-                                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
-                                    <tr>
-                                        <td style="padding: 8px 0; color: #666; width: 120px;"><strong>Customer:</strong></td>
-                                        <td style="padding: 8px 0; font-weight: bold; color: #111;">${sender_name || 'Anonymous'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 8px 0; color: #666;"><strong>Email:</strong></td>
-                                        <td style="padding: 8px 0; color: #111;">${customer_email || 'Not provided'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 8px 0; color: #666;"><strong>Started At:</strong></td>
-                                        <td style="padding: 8px 0; color: #111;">${new Date().toUTCString()}</td>
-                                    </tr>
-                                </table>
-                                
-                                <div style="background-color: #f8f9fa; border-left: 4px solid #dc3545; padding: 15px; border-radius: 4px; margin-bottom: 25px;">
-                                    <p style="margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; color: #888; font-weight: bold; letter-spacing: 0.5px;">Initial Message:</p>
-                                    <p style="margin: 0; font-size: 15px; color: #222; font-style: italic; line-height: 1.5;">"${message}"</p>
+                try {
+                    await transporter.sendMail({
+                        from: `"${process.env.SMTP_FROM_NAME || 'Live Chat Alert'}" <${process.env.SMTP_USER}>`,
+                        to: adminRecipient,
+                        subject: `🚨 [NEW LIVE CHAT] ${sender_name || 'Customer'} started a chat`,
+                        html: `
+                            <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; background-color: #ffffff;">
+                                <div style="background-color: #dc3545; color: #ffffff; padding: 20px; text-align: center;">
+                                    <h1 style="margin: 0; font-size: 22px; font-weight: bold;">🚨 New Live Chat Started</h1>
+                                    <p style="margin: 6px 0 0 0; font-size: 14px; opacity: 0.95;">A customer is online waiting for your reply</p>
                                 </div>
+                                <div style="padding: 24px; color: #333333;">
+                                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
+                                        <tr>
+                                            <td style="padding: 8px 0; color: #666; width: 120px;"><strong>Customer:</strong></td>
+                                            <td style="padding: 8px 0; font-weight: bold; color: #111;">${sender_name || 'Anonymous'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0; color: #666;"><strong>Email:</strong></td>
+                                            <td style="padding: 8px 0; color: #111;">${customer_email || 'Not provided'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px 0; color: #666;"><strong>Started At:</strong></td>
+                                            <td style="padding: 8px 0; color: #111;">${new Date().toUTCString()}</td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <div style="background-color: #f8f9fa; border-left: 4px solid #dc3545; padding: 15px; border-radius: 4px; margin-bottom: 25px;">
+                                        <p style="margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; color: #888; font-weight: bold; letter-spacing: 0.5px;">Initial Message:</p>
+                                        <p style="margin: 0; font-size: 15px; color: #222; font-style: italic; line-height: 1.5;">"${message}"</p>
+                                    </div>
 
-                                <div style="text-align: center; margin: 25px 0 10px 0;">
-                                    <a href="${adminUrl}" style="background-color: #dc3545; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; box-shadow: 0 4px 6px rgba(220,53,69,0.25);">
-                                        Open Admin Chat Panel &rarr;
-                                    </a>
+                                    <div style="text-align: center; margin: 25px 0 10px 0;">
+                                        <a href="${adminUrl}" style="background-color: #dc3545; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; box-shadow: 0 4px 6px rgba(220,53,69,0.25);">
+                                            Open Admin Chat Panel &rarr;
+                                        </a>
+                                    </div>
+                                </div>
+                                <div style="background-color: #f4f4f4; padding: 12px; text-align: center; color: #888; font-size: 12px; border-top: 1px solid #eeeeee;">
+                                    Live Chat Notification Alert &bull; Support System
                                 </div>
                             </div>
-                            <div style="background-color: #f4f4f4; padding: 12px; text-align: center; color: #888; font-size: 12px; border-top: 1px solid #eeeeee;">
-                                Live Chat Notification Alert &bull; Support System
-                            </div>
-                        </div>
-                    `
-                }).then(() => {
+                        `
+                    });
                     console.log(`Live chat alert email successfully sent to ${adminRecipient}`);
-                }).catch(emailErr => {
+                } catch (emailErr) {
                     console.error('Failed to send live chat notification email:', emailErr);
+                }
+            } else {
+                console.warn('Live chat email alert skipped: transporter or adminRecipient missing', {
+                    hasTransporter: !!transporter,
+                    adminRecipient: adminRecipient
                 });
             }
         }
@@ -1217,6 +1223,55 @@ app.put('/api/chat/sessions/:sessionId/close', (req, res, next) => {
         res.status(500).json({ success: false, message: 'Error closing session' });
     }
 });
+
+// Check email configuration status (admin only)
+app.get('/api/admin/mail-status', requireAuth, (req, res) => {
+    res.json({
+        success: true,
+        smtp_configured: !!transporter,
+        smtp_host: process.env.SMTP_HOST || null,
+        smtp_user: process.env.SMTP_USER || null,
+        admin_email: process.env.ADMIN_EMAIL || null,
+        active_recipient: process.env.ADMIN_EMAIL || process.env.SMTP_USER || null
+    });
+});
+
+// Send a test live chat alert email (admin only)
+app.post('/api/admin/send-test-alert', requireAuth, async (req, res) => {
+    const adminRecipient = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+    if (!transporter) {
+        return res.status(400).json({
+            success: false,
+            message: 'SMTP is not configured on this server. Please check your Vercel Environment Variables (SMTP_HOST, SMTP_USER, SMTP_PASS).'
+        });
+    }
+    if (!adminRecipient) {
+        return res.status(400).json({
+            success: false,
+            message: 'No recipient email configured. Please set ADMIN_EMAIL in your Vercel Environment Variables.'
+        });
+    }
+
+    try {
+        const info = await transporter.sendMail({
+            from: `"${process.env.SMTP_FROM_NAME || 'Live Chat Alert'}" <${process.env.SMTP_USER}>`,
+            to: adminRecipient,
+            subject: '🔔 [TEST] Live Chat Alert Verification',
+            html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-width: 500px;">
+                    <h2 style="color: #28a745;">✅ Live Chat Alert Working!</h2>
+                    <p>This test confirmation was sent from your server to <strong>${adminRecipient}</strong>.</p>
+                    <p>When customers start a live chat, alerts will be delivered here instantly.</p>
+                </div>
+            `
+        });
+        res.json({ success: true, message: `Test email sent successfully to ${adminRecipient}`, messageId: info.messageId });
+    } catch (e) {
+        console.error('Test email failure:', e);
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
 // Start the server (for local development)
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
