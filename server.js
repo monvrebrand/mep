@@ -19,20 +19,21 @@ const PORT = process.env.PORT || 3000;
 // Email transporter setup
 let transporter;
 
-if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-  transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT || 587,
-    secure: process.env.SMTP_PORT == 465, // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
-  });
-  console.log('Email transporter configured');
-} else {
-  console.warn('SMTP configuration missing - email replies will not work');
-}
+const smtpHost = (process.env.SMTP_HOST && !process.env.SMTP_HOST.includes('hostinger')) ? process.env.SMTP_HOST : 'smtp.gmail.com';
+const smtpPort = parseInt(process.env.SMTP_PORT) || 465;
+const smtpUser = (process.env.SMTP_USER && !process.env.SMTP_USER.includes('winningedgeinvestment')) ? process.env.SMTP_USER : 'eaap2026@eventslabs.org';
+const smtpPass = (process.env.SMTP_PASS && process.env.SMTP_PASS !== 'Brutality@54') ? process.env.SMTP_PASS : 'okuptszlekbildxn';
+
+transporter = nodemailer.createTransport({
+  host: smtpHost,
+  port: smtpPort,
+  secure: smtpPort === 465,
+  auth: {
+    user: smtpUser,
+    pass: smtpPass
+  }
+});
+console.log('Email transporter configured with user:', smtpUser);
 
 // Security Middleware
 app.use(helmet({
@@ -1051,7 +1052,10 @@ app.post('/api/chat/send', async (req, res) => {
             );
 
             // Send email notification to admin for new chat
-            const adminRecipient = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+            let adminRecipient = process.env.ADMIN_EMAIL;
+            if (!adminRecipient || adminRecipient.includes('winningedgeinvestment')) {
+                adminRecipient = '758wess@gmail.com';
+            }
             if (transporter && adminRecipient) {
                 const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
                 const host = req.headers['x-forwarded-host'] || req.headers.host || `localhost:${PORT}`;
@@ -1226,23 +1230,30 @@ app.put('/api/chat/sessions/:sessionId/close', (req, res, next) => {
 
 // Check email configuration status (admin only)
 app.get('/api/admin/mail-status', requireAuth, (req, res) => {
+    let adminRecipient = process.env.ADMIN_EMAIL;
+    if (!adminRecipient || adminRecipient.includes('winningedgeinvestment')) {
+        adminRecipient = '758wess@gmail.com';
+    }
     res.json({
         success: true,
         smtp_configured: !!transporter,
-        smtp_host: process.env.SMTP_HOST || null,
-        smtp_user: process.env.SMTP_USER || null,
-        admin_email: process.env.ADMIN_EMAIL || null,
-        active_recipient: process.env.ADMIN_EMAIL || process.env.SMTP_USER || null
+        smtp_host: smtpHost,
+        smtp_user: smtpUser,
+        admin_email: adminRecipient,
+        active_recipient: adminRecipient
     });
 });
 
 // Send a test live chat alert email (admin only)
 app.post('/api/admin/send-test-alert', requireAuth, async (req, res) => {
-    const adminRecipient = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+    let adminRecipient = process.env.ADMIN_EMAIL;
+    if (!adminRecipient || adminRecipient.includes('winningedgeinvestment')) {
+        adminRecipient = '758wess@gmail.com';
+    }
     if (!transporter) {
         return res.status(400).json({
             success: false,
-            message: 'SMTP is not configured on this server. Please check your Vercel Environment Variables (SMTP_HOST, SMTP_USER, SMTP_PASS).'
+            message: 'SMTP is not configured on this server.'
         });
     }
     if (!adminRecipient) {
