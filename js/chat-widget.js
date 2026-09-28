@@ -177,6 +177,7 @@
     let customerName = localStorage.getItem('chatCustomerName');
     let customerEmail = localStorage.getItem('chatCustomerEmail');
     let pollingInterval;
+    let isStartingSession = false; // Guard to prevent endChat flash on new session start
 
     function toggleChat() {
         if (box.style.display === 'none' || box.style.display === '') {
@@ -221,9 +222,17 @@
         localStorage.setItem('chatCustomerName', name);
         localStorage.setItem('chatCustomerEmail', email);
 
-        sendMessageToApi(msg, true);
+        // Guard: prevent endChat flash while session is being created on server
+        isStartingSession = true;
         showChatInterface();
-        startPolling();
+        sendMessageToApi(msg, true).then(() => {
+            // Only start polling AFTER the session is confirmed created on the server
+            setTimeout(() => {
+                isStartingSession = false;
+                loadMessages();
+                startPolling();
+            }, 2000);
+        });
     }
 
     async function sendMessageToApi(message, isFirst = false) {
@@ -252,10 +261,13 @@
         } catch (e) {
             console.error(e);
         }
+        // Always return a resolved promise so callers can .then() safely
     }
 
     async function loadMessages() {
         if (!sessionId) return;
+        // Skip during session startup to avoid endChat flash
+        if (isStartingSession) return;
         try {
             const res = await fetch(`/api/chat/messages/${sessionId}`);
             const data = await res.json();
