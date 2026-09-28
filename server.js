@@ -1051,30 +1051,59 @@ app.post('/api/chat/send', async (req, res) => {
             );
 
             // Send email notification to admin for new chat
-            if (transporter && process.env.ADMIN_EMAIL) {
-                try {
-                    const adminUrl = `http://localhost:${PORT}/admin-messages.html`;
-                    await transporter.sendMail({
-                        from: `${process.env.SMTP_FROM_NAME || 'Santander Support'} <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
-                        to: process.env.ADMIN_EMAIL,
-                        subject: `New Live Chat Request from ${sender_name}`,
-                        html: `
-                            <h2>New Live Chat Session</h2>
-                            <p>A new live chat session has been started by a customer.</p>
-                            <ul>
-                                <li><strong>Name:</strong> ${sender_name}</li>
-                                <li><strong>Email:</strong> ${customer_email}</li>
-                            </ul>
-                            <p><strong>Initial Message:</strong></p>
-                            <p><em>${message}</em></p>
-                            <p>Please log in to the admin panel to respond.</p>
-                            <a href="${adminUrl}" style="display: inline-block; padding: 10px 20px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px;">Go to Admin Panel</a>
-                        `
-                    });
-                    console.log(`Live chat notification sent to ${process.env.ADMIN_EMAIL}`);
-                } catch (emailErr) {
+            const adminRecipient = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+            if (transporter && adminRecipient) {
+                const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+                const host = req.headers['x-forwarded-host'] || req.headers.host || `localhost:${PORT}`;
+                const adminUrl = process.env.APP_URL ? `${process.env.APP_URL}/admin-messages.html` : `${protocol}://${host}/admin-messages.html`;
+
+                transporter.sendMail({
+                    from: `"${process.env.SMTP_FROM_NAME || 'Live Chat Alert'}" <${process.env.SMTP_USER}>`,
+                    to: adminRecipient,
+                    subject: `🚨 [NEW LIVE CHAT] ${sender_name || 'Customer'} started a chat`,
+                    html: `
+                        <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; background-color: #ffffff;">
+                            <div style="background-color: #dc3545; color: #ffffff; padding: 20px; text-align: center;">
+                                <h1 style="margin: 0; font-size: 22px; font-weight: bold;">🚨 New Live Chat Started</h1>
+                                <p style="margin: 6px 0 0 0; font-size: 14px; opacity: 0.95;">A customer is online waiting for your reply</p>
+                            </div>
+                            <div style="padding: 24px; color: #333333;">
+                                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
+                                    <tr>
+                                        <td style="padding: 8px 0; color: #666; width: 120px;"><strong>Customer:</strong></td>
+                                        <td style="padding: 8px 0; font-weight: bold; color: #111;">${sender_name || 'Anonymous'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; color: #666;"><strong>Email:</strong></td>
+                                        <td style="padding: 8px 0; color: #111;">${customer_email || 'Not provided'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; color: #666;"><strong>Started At:</strong></td>
+                                        <td style="padding: 8px 0; color: #111;">${new Date().toUTCString()}</td>
+                                    </tr>
+                                </table>
+                                
+                                <div style="background-color: #f8f9fa; border-left: 4px solid #dc3545; padding: 15px; border-radius: 4px; margin-bottom: 25px;">
+                                    <p style="margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; color: #888; font-weight: bold; letter-spacing: 0.5px;">Initial Message:</p>
+                                    <p style="margin: 0; font-size: 15px; color: #222; font-style: italic; line-height: 1.5;">"${message}"</p>
+                                </div>
+
+                                <div style="text-align: center; margin: 25px 0 10px 0;">
+                                    <a href="${adminUrl}" style="background-color: #dc3545; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-weight: bold; font-size: 15px; display: inline-block; box-shadow: 0 4px 6px rgba(220,53,69,0.25);">
+                                        Open Admin Chat Panel &rarr;
+                                    </a>
+                                </div>
+                            </div>
+                            <div style="background-color: #f4f4f4; padding: 12px; text-align: center; color: #888; font-size: 12px; border-top: 1px solid #eeeeee;">
+                                Live Chat Notification Alert &bull; Support System
+                            </div>
+                        </div>
+                    `
+                }).then(() => {
+                    console.log(`Live chat alert email successfully sent to ${adminRecipient}`);
+                }).catch(emailErr => {
                     console.error('Failed to send live chat notification email:', emailErr);
-                }
+                });
             }
         }
 
