@@ -373,6 +373,59 @@
       color: #999;
       font-size: 14px;
     }
+
+    /* Account management and balance adjustment styles */
+    .balance-pill {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f5132;
+      background-color: #d1e7dd;
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+    .action-toggle-group {
+      display: flex;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #ced4da;
+      margin-bottom: 20px;
+    }
+    .action-toggle-btn {
+      flex: 1;
+      padding: 10px 15px;
+      text-align: center;
+      background-color: #f8f9fa;
+      cursor: pointer;
+      font-weight: 600;
+      border: none;
+      transition: all 0.2s ease;
+      color: #495057;
+    }
+    .action-toggle-btn.active-credit {
+      background-color: #198754;
+      color: #ffffff;
+    }
+    .action-toggle-btn.active-debit {
+      background-color: #dc3545;
+      color: #ffffff;
+    }
+    .quick-amount-btn {
+      border: 1px solid #ced4da;
+      background: white;
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      color: #495057;
+    }
+    .quick-amount-btn:hover {
+      background: #dc3545;
+      color: white;
+      border-color: #dc3545;
+    }
   </style>
 </head>
 
@@ -414,6 +467,9 @@
         </button>
         <button class="tab-button" onclick="switchTab('registrations')">
           <i class="bi bi-person-plus"></i> Registrations <span id="regBadge" class="unread-badge" style="display: none; margin-left: 8px;"></span>
+        </button>
+        <button class="tab-button" onclick="switchTab('account-management')">
+          <i class="bi bi-wallet2"></i> Account Balances
         </button>
         <button class="tab-button" onclick="switchTab('audit-logs')">
           <i class="bi bi-shield-check"></i> Audit Logs
@@ -590,6 +646,94 @@
         </div>
       </div> <!-- End audit logs tab -->
 
+      <!-- Account Management Tab -->
+      <div id="account-management" class="tab-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 mt-2 flex-wrap gap-2">
+          <div>
+            <h4 class="fw-bold mb-1"><i class="bi bi-wallet2 text-danger me-2"></i>User Account Balances</h4>
+            <p class="text-muted small mb-0">Deposit (credit) or deduct (debit) funds across all registered customer accounts.</p>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-danger btn-sm" onclick="loadAdminAccounts()">
+              <i class="bi bi-arrow-clockwise"></i> Refresh Accounts
+            </button>
+          </div>
+        </div>
+
+        <!-- Account Statistics -->
+        <div class="stats mb-4">
+          <div class="stat-box">
+            <div class="stat-number text-dark" id="totalAdminAccountsCount">0</div>
+            <div class="stat-label">Total Accounts</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number text-success" id="totalAdminLiquidity">$0.00</div>
+            <div class="stat-label">Total Combined Balance</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-number text-primary" id="activeCustomersCount">0</div>
+            <div class="stat-label">Active Users with Accounts</div>
+          </div>
+        </div>
+
+        <!-- Controls / Search & Filters -->
+        <div class="row g-2 mb-3 align-items-center">
+          <div class="col-md-5">
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+              <input 
+                type="text" 
+                id="accountSearchInput" 
+                class="form-control" 
+                placeholder="Search by customer name, username, email, account #..."
+                onkeyup="filterAdminAccounts()"
+              >
+            </div>
+          </div>
+          <div class="col-md-3">
+            <select class="form-select" id="accountTypeFilter" onchange="filterAdminAccounts()">
+              <option value="">All Account Types</option>
+              <option value="Current">Current Account</option>
+              <option value="Savings">Savings Account</option>
+              <option value="Business">Business Account</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <select class="form-select" id="accountSortFilter" onchange="filterAdminAccounts()">
+              <option value="balance-desc">Sort by: Highest Balance</option>
+              <option value="balance-asc">Sort by: Lowest Balance</option>
+              <option value="newest">Sort by: Newest Accounts</option>
+              <option value="name-asc">Sort by: Customer Name (A-Z)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Accounts Table -->
+        <div class="table-responsive bg-white rounded shadow-sm border">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Customer</th>
+                <th>Contact</th>
+                <th>Account Type</th>
+                <th>Account Number</th>
+                <th>Status</th>
+                <th class="text-end">Current Balance</th>
+                <th class="text-center" style="width: 250px;">Manage Balance</th>
+              </tr>
+            </thead>
+            <tbody id="adminAccountsList">
+              <tr>
+                <td colspan="7" class="text-center text-muted py-5">
+                  <div class="spinner-border text-danger spinner-border-sm me-2" role="status"></div>
+                  Loading accounts...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div> <!-- End account-management tab -->
+
     </div>
   </main>
 
@@ -726,6 +870,174 @@
     </div>
   </div>
 
+  <!-- Adjust Balance Modal -->
+  <div class="modal fade" id="adjustBalanceModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title fw-bold" id="adjustBalanceModalTitle">
+            <i class="bi bi-wallet2 me-1"></i> Adjust Account Balance
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <!-- Account Info Banner -->
+          <div class="p-3 bg-light rounded border mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="text-muted small">Account Owner</span>
+              <strong id="adjOwnerName">Customer Name</strong>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="text-muted small">Account Details</span>
+              <span><span class="badge bg-secondary" id="adjAccountType">Current</span> <code class="fw-bold" id="adjAccountNumber">1234567890</code></span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+              <span class="fw-bold text-dark">Current Balance</span>
+              <span class="fs-5 fw-bold text-success" id="adjCurrentBalance">$0.00</span>
+            </div>
+          </div>
+
+          <!-- Action Toggle (Add / Reduce) -->
+          <label class="form-label fw-bold small text-muted text-uppercase mb-2">Adjustment Action</label>
+          <div class="action-toggle-group">
+            <button type="button" class="action-toggle-btn active-credit" id="toggleAddBtn" onclick="setAdjustAction('add')">
+              <i class="bi bi-plus-circle me-1"></i> Add Funds (Credit)
+            </button>
+            <button type="button" class="action-toggle-btn" id="toggleReduceBtn" onclick="setAdjustAction('reduce')">
+              <i class="bi bi-dash-circle me-1"></i> Reduce Funds (Debit)
+            </button>
+          </div>
+
+          <!-- Amount Input -->
+          <div class="mb-3">
+            <label for="adjAmountInput" class="form-label fw-bold">Amount to Adjust ($)</label>
+            <div class="input-group input-group-lg">
+              <span class="input-group-text bg-white fw-bold">$</span>
+              <input 
+                type="number" 
+                step="0.01" 
+                min="0.01" 
+                class="form-control fw-bold" 
+                id="adjAmountInput" 
+                placeholder="0.00"
+                oninput="updateBalancePreview()"
+              >
+            </div>
+            <!-- Quick Amount Pills -->
+            <div class="d-flex gap-2 mt-2 flex-wrap">
+              <span class="text-muted small align-self-center me-1">Quick:</span>
+              <button type="button" class="quick-amount-btn" onclick="setQuickAmount(50)">+$50</button>
+              <button type="button" class="quick-amount-btn" onclick="setQuickAmount(100)">+$100</button>
+              <button type="button" class="quick-amount-btn" onclick="setQuickAmount(250)">+$250</button>
+              <button type="button" class="quick-amount-btn" onclick="setQuickAmount(500)">+$500</button>
+              <button type="button" class="quick-amount-btn" onclick="setQuickAmount(1000)">+$1,000</button>
+              <button type="button" class="quick-amount-btn" onclick="setQuickAmount(5000)">+$5,000</button>
+            </div>
+          </div>
+
+          <!-- Live Preview Box -->
+          <div class="alert alert-light border p-3 mb-3" id="adjPreviewBox">
+            <div class="d-flex justify-content-between align-items-center small text-muted mb-1">
+              <span>Current: <strong id="previewCurrentBal">$0.00</strong></span>
+              <span id="previewActionSign" class="text-success fw-bold">+ $0.00</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fw-bold">Projected New Balance:</span>
+              <span class="fs-5 fw-bold text-dark" id="previewNewBal">$0.00</span>
+            </div>
+            <div id="adjInsufficientFundsAlert" class="text-danger small mt-2 fw-bold" style="display: none;">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i> Deduction amount exceeds current account balance!
+            </div>
+          </div>
+
+          <!-- Description / Reason -->
+          <div class="mb-3">
+            <label for="adjDescriptionInput" class="form-label fw-bold">Reason / Description</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="adjDescriptionInput" 
+              placeholder="e.g. Admin deposit correction, bonus credit, fee deduction"
+            >
+            <!-- Preset Reason Suggestions -->
+            <div class="d-flex gap-1 mt-1 flex-wrap">
+              <button type="button" class="badge bg-light text-dark border py-1 px-2 border-0" onclick="setAdjDescription('Admin deposit adjustment')">Deposit adjustment</button>
+              <button type="button" class="badge bg-light text-dark border py-1 px-2 border-0" onclick="setAdjDescription('Customer compensation credit')">Compensation</button>
+              <button type="button" class="badge bg-light text-dark border py-1 px-2 border-0" onclick="setAdjDescription('Administrative fee debit')">Fee debit</button>
+              <button type="button" class="badge bg-light text-dark border py-1 px-2 border-0" onclick="setAdjDescription('Reversal adjustment')">Reversal</button>
+            </div>
+          </div>
+
+          <!-- Notification Checkbox -->
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" id="adjNotifyUser" checked>
+            <label class="form-check-label small" for="adjNotifyUser">
+              Notify customer via email & in-app banking notification
+            </label>
+          </div>
+
+          <!-- Error Feedback Alert -->
+          <div class="alert alert-danger py-2 small mb-0 mt-3" id="adjErrorAlert" style="display: none;"></div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success fw-bold" id="adjSubmitBtn" onclick="submitBalanceAdjustment()">
+            <span class="spinner-border spinner-border-sm me-1" id="adjSpinner" style="display: none;"></span>
+            <span id="adjSubmitBtnText">Confirm Addition</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Transaction History Modal -->
+  <div class="modal fade" id="accountHistoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title fw-bold">
+            <i class="bi bi-clock-history me-1"></i> Account Transaction History
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded border">
+            <div>
+              <span class="text-muted small">Account:</span>
+              <strong id="historyAccountNumber">...</strong> 
+              <span class="badge bg-secondary ms-1" id="historyAccountType">...</span>
+            </div>
+            <div>
+              <span class="text-muted small">Current Balance:</span>
+              <strong class="text-success fs-5" id="historyCurrentBalance">$0.00</strong>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Description</th>
+                  <th>Balance After</th>
+                </tr>
+              </thead>
+              <tbody id="historyTransactionsList">
+                <tr>
+                  <td colspan="5" class="text-center text-muted py-4">Loading transactions...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="text-center text-dark mt-5 py-4" style="background-color: #f8f9fa; border-top: 1px solid #dee2e6;">
     <div class="container">
@@ -801,8 +1113,12 @@
       });
 
       // Show selected tab
-      document.getElementById(tabName).classList.add('active');
-      event.target.classList.add('active');
+      const targetTab = document.getElementById(tabName);
+      if (targetTab) targetTab.classList.add('active');
+
+      const clickedBtn = (window.event && (window.event.currentTarget || (window.event.target && window.event.target.closest('.tab-button')))) 
+        || document.querySelector(`[onclick*="'${tabName}'"]`);
+      if (clickedBtn) clickedBtn.classList.add('active');
 
       // Load data for the selected tab
       if (tabName === 'live-chat') {
@@ -811,6 +1127,8 @@
         loadMessages();
       } else if (tabName === 'registrations') {
         loadRegistrations();
+      } else if (tabName === 'account-management') {
+        loadAdminAccounts();
       } else if (tabName === 'audit-logs') {
         loadAuditLogs();
       }
@@ -1683,12 +2001,26 @@
       const accountsContainer = document.getElementById('regGeneratedAccountsContainer');
       const accountsDiv = document.getElementById('regGeneratedAccounts');
       if (reg.status === 'approved' && reg.accounts && reg.accounts.length > 0) {
-          accountsDiv.innerHTML = reg.accounts.map(acc => `
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span class="fw-bold">${escapeHtml(acc.account_type)} Account:</span>
-                  <span class="font-monospace bg-white px-2 py-1 rounded">${escapeHtml(acc.account_number)}</span>
+          accountsDiv.innerHTML = reg.accounts.map(acc => {
+              const bal = parseFloat(acc.balance || 0);
+              const formattedBal = bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              return `
+              <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded border">
+                  <div>
+                      <span class="fw-bold">${escapeHtml(acc.account_type)}:</span>
+                      <span class="font-monospace ms-1 bg-light px-2 py-1 rounded">${escapeHtml(acc.account_number)}</span>
+                      <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 ms-2">Balance: $${formattedBal}</span>
+                  </div>
+                  <div>
+                      <button class="btn btn-sm btn-outline-success py-1 px-2 me-1" onclick="openAdjustBalanceModal(${acc.id || 0}, 'add', ${reg.id})" title="Add Funds">
+                          <i class="bi bi-plus-lg"></i> Add
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger py-1 px-2" onclick="openAdjustBalanceModal(${acc.id || 0}, 'reduce', ${reg.id})" title="Reduce Funds">
+                          <i class="bi bi-dash-lg"></i> Reduce
+                      </button>
+                  </div>
               </div>
-          `).join('');
+          `;}).join('');
           accountsContainer.style.display = 'block';
       } else {
           accountsContainer.style.display = 'none';
@@ -1811,6 +2143,435 @@
       if (confirm('Are you sure you want to logout?')) {
         localStorage.removeItem('adminToken');
         window.location.href='admin-login';
+      }
+    }
+
+    // ==========================================
+    // ACCOUNT BALANCES MANAGEMENT MODULE
+    // ==========================================
+    let allAdminAccounts = [];
+    let currentAdjustAccount = null;
+    let currentAdjustAction = 'add'; // 'add' or 'reduce'
+
+    async function loadAdminAccounts() {
+      try {
+        const response = await fetch('/api/admin/accounts', {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('adminToken');
+            window.location.href = 'admin-login';
+            return;
+          }
+          throw new Error('Failed to load accounts');
+        }
+
+        const data = await response.json();
+        if (data.success) {
+          allAdminAccounts = data.accounts || [];
+          displayAdminAccounts(allAdminAccounts);
+          updateAdminAccountsStats(allAdminAccounts);
+        }
+      } catch (err) {
+        console.error('Error loading admin accounts:', err);
+        const list = document.getElementById('adminAccountsList');
+        if (list) {
+          list.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4"><i class="bi bi-exclamation-circle me-1"></i> Failed to load accounts. Please try refreshing.</td></tr>';
+        }
+      }
+    }
+
+    function updateAdminAccountsStats(accounts) {
+      const totalCount = accounts.length;
+      const totalLiquidity = accounts.reduce((sum, a) => sum + (parseFloat(a.balance) || 0), 0);
+      const uniqueUsers = new Set(accounts.map(a => a.registration_id)).size;
+
+      const countEl = document.getElementById('totalAdminAccountsCount');
+      const liqEl = document.getElementById('totalAdminLiquidity');
+      const usersEl = document.getElementById('activeCustomersCount');
+
+      if (countEl) countEl.textContent = totalCount;
+      if (liqEl) liqEl.textContent = '$' + totalLiquidity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (usersEl) usersEl.textContent = uniqueUsers;
+    }
+
+    function filterAdminAccounts() {
+      const search = (document.getElementById('accountSearchInput')?.value || '').toLowerCase().trim();
+      const typeFilter = document.getElementById('accountTypeFilter')?.value || '';
+      const sortFilter = document.getElementById('accountSortFilter')?.value || 'balance-desc';
+
+      let filtered = allAdminAccounts.filter(acc => {
+        const fullName = `${acc.firstname || ''} ${acc.middlename || ''} ${acc.surname || ''}`.toLowerCase();
+        const email = (acc.email || '').toLowerCase();
+        const username = (acc.username || '').toLowerCase();
+        const accNum = (acc.account_number || '').toLowerCase();
+
+        const matchesSearch = !search || fullName.includes(search) || email.includes(search) || username.includes(search) || accNum.includes(search);
+        const matchesType = !typeFilter || (acc.account_type || '').toLowerCase().includes(typeFilter.toLowerCase());
+
+        return matchesSearch && matchesType;
+      });
+
+      // Sorting
+      if (sortFilter === 'balance-desc') {
+        filtered.sort((a, b) => (parseFloat(b.balance) || 0) - (parseFloat(a.balance) || 0));
+      } else if (sortFilter === 'balance-asc') {
+        filtered.sort((a, b) => (parseFloat(a.balance) || 0) - (parseFloat(b.balance) || 0));
+      } else if (sortFilter === 'newest') {
+        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      } else if (sortFilter === 'name-asc') {
+        filtered.sort((a, b) => (a.firstname || '').localeCompare(b.firstname || ''));
+      }
+
+      displayAdminAccounts(filtered);
+    }
+
+    function displayAdminAccounts(accounts) {
+      const list = document.getElementById('adminAccountsList');
+      if (!list) return;
+
+      if (!accounts || accounts.length === 0) {
+        list.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-5"><i class="bi bi-wallet2 fs-2 d-block mb-2"></i>No accounts found matching your criteria</td></tr>';
+        return;
+      }
+
+      list.innerHTML = accounts.map(acc => {
+        const bal = parseFloat(acc.balance || 0);
+        const formattedBal = bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const fullName = `${acc.firstname || ''} ${acc.surname || ''}`.trim();
+        
+        let statusBadge = '<span class="badge bg-success">Active</span>';
+        if (acc.user_status === 'suspended') statusBadge = '<span class="badge bg-warning text-dark">Suspended</span>';
+        if (acc.user_status === 'blocked') statusBadge = '<span class="badge bg-dark">Blocked</span>';
+        if (acc.user_status === 'rejected') statusBadge = '<span class="badge bg-danger">Rejected</span>';
+
+        return `
+          <tr>
+            <td>
+              <div class="fw-bold">${escapeHtml(fullName || 'Unknown')}</div>
+              <small class="text-muted">@${escapeHtml(acc.username || 'user')}</small>
+            </td>
+            <td>
+              <div>${escapeHtml(acc.email || 'N/A')}</div>
+              <small class="text-muted">${escapeHtml(acc.phone || '')}</small>
+            </td>
+            <td>
+              <span class="badge bg-light text-dark border">${escapeHtml(acc.account_type || 'Account')}</span>
+            </td>
+            <td>
+              <span class="font-monospace bg-light px-2 py-1 rounded border">
+                ${escapeHtml(acc.account_number)}
+              </span>
+              <button class="btn btn-sm btn-link text-muted p-0 ms-1" onclick="copyToClipboard('${escapeHtml(acc.account_number)}')" title="Copy Account Number">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </td>
+            <td>${statusBadge}</td>
+            <td class="text-end">
+              <span class="fw-bold fs-6 ${bal > 0 ? 'text-success' : 'text-dark'}">$${formattedBal}</span>
+            </td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-success" onclick="openAdjustBalanceModal(${acc.id}, 'add')" title="Add money into this account">
+                  <i class="bi bi-plus-lg me-1"></i> Add
+                </button>
+                <button class="btn btn-danger" onclick="openAdjustBalanceModal(${acc.id}, 'reduce')" title="Reduce money from this account">
+                  <i class="bi bi-dash-lg me-1"></i> Reduce
+                </button>
+                <button class="btn btn-outline-secondary" onclick="openAccountHistoryModal(${acc.id})" title="View transaction logs">
+                  <i class="bi bi-clock-history"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        // Feedback toast or small alert
+        const originalTitle = document.title;
+        document.title = 'Copied!';
+        setTimeout(() => { document.title = originalTitle; }, 1000);
+      }).catch(err => console.error('Copy failed:', err));
+    }
+
+    // Modal: Open Adjust Balance Modal
+    async function openAdjustBalanceModal(accountId, action = 'add', parentRegistrationId = null) {
+      // Find account from allAdminAccounts or from allRegistrations
+      let account = allAdminAccounts.find(a => a.id === accountId);
+      
+      // If not in allAdminAccounts, find in allRegistrations
+      if (!account && parentRegistrationId) {
+        const reg = allRegistrations.find(r => r.id === parentRegistrationId);
+        if (reg && reg.accounts) {
+          const accFound = reg.accounts.find(a => a.id === accountId || a.account_number);
+          if (accFound) {
+            account = {
+              id: accFound.id || accountId,
+              account_type: accFound.account_type,
+              account_number: accFound.account_number,
+              balance: accFound.balance || 0,
+              firstname: reg.firstname,
+              surname: reg.surname,
+              username: reg.username,
+              email: reg.email
+            };
+          }
+        }
+      }
+
+      // If still not found, fetch accounts list to populate
+      if (!account) {
+        await loadAdminAccounts();
+        account = allAdminAccounts.find(a => a.id === accountId);
+      }
+
+      if (!account) {
+        alert('Could not find account details.');
+        return;
+      }
+
+      currentAdjustAccount = account;
+      currentAdjustAction = action;
+
+      // Populate Modal Fields
+      document.getElementById('adjOwnerName').textContent = `${account.firstname || ''} ${account.surname || ''} (@${account.username || 'user'})`;
+      document.getElementById('adjAccountType').textContent = account.account_type || 'Account';
+      document.getElementById('adjAccountNumber').textContent = account.account_number;
+      
+      const bal = parseFloat(account.balance) || 0;
+      document.getElementById('adjCurrentBalance').textContent = '$' + bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById('previewCurrentBal').textContent = '$' + bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      // Reset Inputs
+      document.getElementById('adjAmountInput').value = '';
+      document.getElementById('adjDescriptionInput').value = '';
+      document.getElementById('adjErrorAlert').style.display = 'none';
+      document.getElementById('adjErrorAlert').textContent = '';
+      document.getElementById('adjNotifyUser').checked = true;
+
+      // Configure Action State
+      setAdjustAction(action);
+      updateBalancePreview();
+
+      const modalEl = document.getElementById('adjustBalanceModal');
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+    }
+
+    function setAdjustAction(action) {
+      currentAdjustAction = action;
+      const addBtn = document.getElementById('toggleAddBtn');
+      const redBtn = document.getElementById('toggleReduceBtn');
+      const submitBtn = document.getElementById('adjSubmitBtn');
+      const modalTitle = document.getElementById('adjustBalanceModalTitle');
+
+      if (action === 'add') {
+        addBtn.className = 'action-toggle-btn active-credit';
+        redBtn.className = 'action-toggle-btn';
+        submitBtn.className = 'btn btn-success fw-bold';
+        modalTitle.innerHTML = '<i class="bi bi-plus-circle me-1"></i> Add Funds (Credit Account)';
+        document.getElementById('adjDescriptionInput').placeholder = 'e.g. Admin deposit correction, bonus credit';
+      } else {
+        addBtn.className = 'action-toggle-btn';
+        redBtn.className = 'action-toggle-btn active-debit';
+        submitBtn.className = 'btn btn-danger fw-bold';
+        modalTitle.innerHTML = '<i class="bi bi-dash-circle me-1"></i> Reduce Funds (Debit Account)';
+        document.getElementById('adjDescriptionInput').placeholder = 'e.g. Administrative charge, fee deduction, reversal';
+      }
+
+      updateBalancePreview();
+    }
+
+    function setQuickAmount(val) {
+      const input = document.getElementById('adjAmountInput');
+      input.value = parseFloat(val).toFixed(2);
+      updateBalancePreview();
+    }
+
+    function setAdjDescription(desc) {
+      document.getElementById('adjDescriptionInput').value = desc;
+    }
+
+    function updateBalancePreview() {
+      if (!currentAdjustAccount) return;
+
+      const currentBal = parseFloat(currentAdjustAccount.balance) || 0;
+      const amt = parseFloat(document.getElementById('adjAmountInput').value) || 0;
+      const previewSign = document.getElementById('previewActionSign');
+      const previewNewBal = document.getElementById('previewNewBal');
+      const submitBtnText = document.getElementById('adjSubmitBtnText');
+      const warnAlert = document.getElementById('adjInsufficientFundsAlert');
+
+      let newBal = currentBal;
+      if (currentAdjustAction === 'add') {
+        newBal = currentBal + amt;
+        previewSign.className = 'text-success fw-bold';
+        previewSign.textContent = `+ $${amt.toFixed(2)}`;
+        submitBtnText.textContent = amt > 0 ? `Confirm Add ($${amt.toFixed(2)})` : 'Confirm Addition';
+        warnAlert.style.display = 'none';
+      } else {
+        newBal = currentBal - amt;
+        previewSign.className = 'text-danger fw-bold';
+        previewSign.textContent = `- $${amt.toFixed(2)}`;
+        submitBtnText.textContent = amt > 0 ? `Confirm Reduce ($${amt.toFixed(2)})` : 'Confirm Deduction';
+        
+        if (amt > currentBal) {
+          warnAlert.style.display = 'block';
+        } else {
+          warnAlert.style.display = 'none';
+        }
+      }
+
+      previewNewBal.textContent = '$' + newBal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    async function submitBalanceAdjustment() {
+      if (!currentAdjustAccount) return;
+
+      const amtInput = document.getElementById('adjAmountInput');
+      const amt = parseFloat(amtInput.value);
+      const errAlert = document.getElementById('adjErrorAlert');
+      const spinner = document.getElementById('adjSpinner');
+      const submitBtn = document.getElementById('adjSubmitBtn');
+
+      errAlert.style.display = 'none';
+      errAlert.textContent = '';
+
+      if (isNaN(amt) || amt <= 0) {
+        errAlert.textContent = 'Please enter a valid positive amount.';
+        errAlert.style.display = 'block';
+        amtInput.focus();
+        return;
+      }
+
+      const currentBal = parseFloat(currentAdjustAccount.balance) || 0;
+      if (currentAdjustAction === 'reduce' && amt > currentBal) {
+        errAlert.textContent = `Insufficient balance: Current balance is $${currentBal.toFixed(2)}, which cannot cover deduction of $${amt.toFixed(2)}.`;
+        errAlert.style.display = 'block';
+        return;
+      }
+
+      const desc = document.getElementById('adjDescriptionInput').value.trim();
+      const notifyUser = document.getElementById('adjNotifyUser').checked;
+
+      // Loading state
+      submitBtn.disabled = true;
+      spinner.style.display = 'inline-block';
+
+      try {
+        const response = await fetch(`/api/admin/accounts/${currentAdjustAccount.id}/adjust-balance`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${adminToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            action: currentAdjustAction,
+            amount: amt,
+            description: desc,
+            notifyUser: notifyUser
+          })
+        });
+
+        const data = await response.json();
+        submitBtn.disabled = false;
+        spinner.style.display = 'none';
+
+        if (response.ok && data.success) {
+          // Hide modal
+          const modalEl = document.getElementById('adjustBalanceModal');
+          const modal = bootstrap.Modal.getInstance(modalEl);
+          if (modal) modal.hide();
+
+          // Refresh accounts table
+          await loadAdminAccounts();
+
+          // Also update registrations list if loaded
+          await loadRegistrations();
+
+          // If registrationModal is open, refresh its view
+          const regModalEl = document.getElementById('registrationModal');
+          if (regModalEl && regModalEl.classList.contains('show') && currentAdjustAccount.registration_id) {
+            openRegistration(currentAdjustAccount.registration_id);
+          }
+
+          alert(`Success: ${data.message}`);
+        } else {
+          errAlert.textContent = data.message || 'Error processing balance adjustment.';
+          errAlert.style.display = 'block';
+        }
+      } catch (err) {
+        console.error('Error adjusting balance:', err);
+        submitBtn.disabled = false;
+        spinner.style.display = 'none';
+        errAlert.textContent = 'Server communication error. Please try again.';
+        errAlert.style.display = 'block';
+      }
+    }
+
+    // Modal: Open Account History Modal
+    async function openAccountHistoryModal(accountId) {
+      const account = allAdminAccounts.find(a => a.id === accountId);
+      if (account) {
+        document.getElementById('historyAccountNumber').textContent = account.account_number;
+        document.getElementById('historyAccountType').textContent = account.account_type;
+        const bal = parseFloat(account.balance) || 0;
+        document.getElementById('historyCurrentBalance').textContent = '$' + bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+
+      const list = document.getElementById('historyTransactionsList');
+      list.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4"><div class="spinner-border text-danger spinner-border-sm me-2"></div>Loading transactions...</td></tr>';
+
+      const modalEl = document.getElementById('accountHistoryModal');
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+
+      try {
+        const response = await fetch(`/api/admin/accounts/${accountId}/transactions`, {
+          headers: {
+            'Authorization': `Bearer ${adminToken}`
+          }
+        });
+
+        if (!response.ok) throw new Error('Failed to load transactions');
+        const data = await response.json();
+
+        if (data.success) {
+          const txs = data.transactions || [];
+          if (txs.length === 0) {
+            list.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No transactions recorded for this account.</td></tr>';
+            return;
+          }
+
+          list.innerHTML = txs.map(t => {
+            const isCredit = (t.transaction_type || '').toLowerCase() === 'credit';
+            const badgeClass = isCredit ? 'bg-success' : 'bg-danger';
+            const sign = isCredit ? '+' : '-';
+            const amt = parseFloat(t.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const balAfter = parseFloat(t.balance_after || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const dateStr = new Date(t.created_at).toLocaleString();
+
+            return `
+              <tr>
+                <td class="small text-muted">${dateStr}</td>
+                <td><span class="badge ${badgeClass}">${escapeHtml(t.transaction_type)}</span></td>
+                <td class="fw-bold ${isCredit ? 'text-success' : 'text-danger'}">${sign}$${amt}</td>
+                <td>${escapeHtml(t.description || 'N/A')}</td>
+                <td class="fw-bold">$${balAfter}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      } catch (err) {
+        console.error('Error loading transactions:', err);
+        list.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Error loading transactions.</td></tr>';
       }
     }
   </script>

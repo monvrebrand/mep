@@ -765,8 +765,10 @@ app.get('/api/admin/registrations', requireAuth, async (req, res) => {
             SELECT r.*, (
                 SELECT json_agg(
                     json_build_object(
+                        'id', a.id,
                         'account_type', a.account_type,
-                        'account_number', a.account_number
+                        'account_number', a.account_number,
+                        'balance', a.balance
                     )
                 )
                 FROM accounts a
@@ -905,6 +907,220 @@ app.post('/api/admin/registrations/:id/code', requireAuth, async (req, res) => {
     } catch (err) {
         console.error('Database error:', err);
         res.status(500).json({ success: false, message: 'Error updating transaction code' });
+    }
+});
+
+// Get all accounts (with user info) for admin panel - requires authentication
+app.get('/api/admin/accounts', requireAuth, async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                a.id,
+                a.registration_id,
+                a.account_type,
+                a.account_number,
+                a.balance,
+                a.created_at,
+                r.firstname,
+                r.middlename,
+                r.surname,
+                r.email,
+                r.username,
+                r.phone,
+                r.status as user_status
+            FROM accounts a
+            JOIN registrations r ON a.registration_id = r.id
+            ORDER BY a.created_at DESC
+        `;
+        const { rows } = await db.query(query);
+        res.json({ success: true, accounts: rows });
+    } catch (err) {
+        console.error('Database error fetching admin accounts:', err);
+        res.status(500).json({ success: false, message: 'Error retrieving user accounts' });
+    }
+});
+
+// Adjust account balance (add or reduce amount) - requires authentication
+app.post('/api/admin/accounts/:id/adjust-balance', requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const { action, amount, description, notifyUser = true } = req.body;
+
+    const amt = parseFloat(amount);
+    if (isNaN(amt) || amt <= 0) {
+        return res.status(400).json({ success: false, message: 'Please enter a valid positive amount.' });
+    }
+
+    const normAction = (action || '').toLowerCase().trim();
+    if (!['add', 'credit', 'reduce', 'debit'].includes(normAction)) {
+        return res.status(400).json({ success: false, message: 'Action must be "add" (credit) or "reduce" (debit).' });
+    }
+
+    const isCredit = (normAction === 'add' || normAction === 'credit');
+
+    try {
+        await db.query('BEGIN');
+
+        const accRes = await db.query(
+            `SELECT a.*, r.username, r.email, r.firstname, r.surname 
+             FROM accounts a 
+             JOIN registrations r ON a.registration_id = r.id 
+             WHERE a.id = $1`,
+            [id]
+        );
+        const account = accRes.rows[0];
+
+        if (!account) {
+            await db.query('ROLLBACK');
+            return res.status(404).json({ success: false, message: 'Account not found.' });
+        }
+
+        const currentBalance = parseFloat(account.balance) || 0;
+        let newBalance;
+
+        if (isCredit) {
+            newBalance = parseFloat((currentBalance + amt).toFixed(2));
+        } else {
+            if (currentBalance < amt) {
+                await db.query('ROLLBACK');
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `Insufficient balance: Current balance is $${currentBalance.toFixed(2)}, which cannot cover deduction of $${amt.toFixed(2)}.` 
+                });
+            }
+            newBalance = parseFloat((currentBalance - amt).toFixed(2));
+        }
+
+        // Update account balance
+        await db.query('UPDATE accounts SET balance = $1 WHERE id = $2', [newBalance, id]);
+
+        // Record transaction
+        const now = new Date();
+        const txType = isCredit ? 'Credit' : 'Debit';
+        const txDesc = (description && description.trim()) 
+            ? description.trim() 
+            : `Admin ${isCredit ? 'Credit Adjustment' : 'Debit Adjustment'}`;
+
+        await db.query(
+            `INSERT INTO transactions (account_id, transaction_type, amount, description, balance_after, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [id, txType, amt, txDesc, newBalance, now]
+        );
+
+        // Optional notification to user
+        if (notifyUser && account.username) {
+            const notifMsg = isCredit
+                ? `Your ${account.account_type} account (${account.account_number}) has been credited with $${amt.toFixed(2)}. ${txDesc}`
+                : `Your ${account.account_type} account (${account.account_number}) has been debited by $${amt.toFixed(2)}. ${txDesc}`;
+            
+            try {
+                await db.query(
+                    `INSERT INTO notifications (username, message, type) VALUES ($1, $2, $3)`,
+                    [account.username, notifMsg, isCredit ? 'credit' : 'debit']
+                );
+            } catch (nErr) {
+                console.error('Failed to insert user notification:', nErr);
+            }
+        }
+
+        await db.query('COMMIT');
+
+        // Optional email alert
+        if (notifyUser && transporter && account.email) {
+            try {
+                const subject = isCredit 
+                    ? `Santander Alert: Account Credited ($${amt.toFixed(2)})` 
+                    : `Santander Alert: Account Debited ($${amt.toFixed(2)})`;
+                const badgeColor = isCredit ? '#198754' : '#dc3545';
+
+                const html = `
+                    <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+                        <div style="background-color: #dc3545; padding: 20px; text-align: center; color: white;">
+                            <h2 style="margin: 0;">Santander Bank</h2>
+                            <p style="margin: 5px 0 0 0; opacity: 0.9;">Account Balance Notice</p>
+                        </div>
+                        <div style="padding: 24px;">
+                            <p>Dear ${account.firstname || 'Customer'},</p>
+                            <p>An adjustment has been processed on your account:</p>
+                            
+                            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                                <tr style="border-bottom: 1px solid #eee;">
+                                    <td style="padding: 10px 0; color: #666;">Account Type:</td>
+                                    <td style="padding: 10px 0; font-weight: bold; text-align: right;">${account.account_type}</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #eee;">
+                                    <td style="padding: 10px 0; color: #666;">Account Number:</td>
+                                    <td style="padding: 10px 0; font-family: monospace; font-weight: bold; text-align: right;">${account.account_number}</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #eee;">
+                                    <td style="padding: 10px 0; color: #666;">Transaction:</td>
+                                    <td style="padding: 10px 0; font-weight: bold; color: ${badgeColor}; text-align: right;">${isCredit ? '+' : '-'}$${amt.toFixed(2)} (${txType})</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid #eee;">
+                                    <td style="padding: 10px 0; color: #666;">Description:</td>
+                                    <td style="padding: 10px 0; text-align: right;">${txDesc}</td>
+                                </tr>
+                                <tr style="border-bottom: 2px solid #dc3545;">
+                                    <td style="padding: 12px 0; color: #333; font-weight: bold;">New Balance:</td>
+                                    <td style="padding: 12px 0; font-size: 18px; font-weight: bold; color: #333; text-align: right;">$${newBalance.toFixed(2)}</td>
+                                </tr>
+                            </table>
+
+                            <p style="font-size: 13px; color: #777;">If you have any questions, please contact our support team immediately.</p>
+                        </div>
+                        <div style="background-color: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #888;">
+                            &copy; Santander Bank. All rights reserved.
+                        </div>
+                    </div>
+                `;
+
+                transporter.sendMail({
+                    from: `${process.env.SMTP_FROM_NAME || 'Santander Support'} <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+                    to: account.email,
+                    subject: subject,
+                    html: html
+                }).catch(e => console.error('Failed to send balance update email:', e));
+            } catch (emailErr) {
+                console.error('Failed to dispatch balance update email:', emailErr);
+            }
+        }
+
+        res.json({
+            success: true,
+            message: `Successfully ${isCredit ? 'added' : 'deducted'} $${amt.toFixed(2)} ${isCredit ? 'to' : 'from'} account ${account.account_number}.`,
+            account: {
+                id: account.id,
+                account_number: account.account_number,
+                account_type: account.account_type,
+                previous_balance: currentBalance,
+                new_balance: newBalance,
+                transaction_type: txType
+            }
+        });
+
+    } catch (err) {
+        await db.query('ROLLBACK');
+        console.error('Database error during balance adjustment:', err);
+        res.status(500).json({ success: false, message: 'Error updating account balance' });
+    }
+});
+
+// Get recent transactions for a specific account (admin view) - requires authentication
+app.get('/api/admin/accounts/:id/transactions', requireAuth, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { rows } = await db.query(
+            `SELECT t.*, a.account_number, a.account_type 
+             FROM transactions t 
+             JOIN accounts a ON t.account_id = a.id 
+             WHERE t.account_id = $1 
+             ORDER BY t.created_at DESC 
+             LIMIT 50`,
+            [id]
+        );
+        res.json({ success: true, transactions: rows });
+    } catch (err) {
+        console.error('Database error retrieving account transactions:', err);
+        res.status(500).json({ success: false, message: 'Error retrieving account transactions' });
     }
 });
 
