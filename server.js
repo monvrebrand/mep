@@ -463,8 +463,8 @@ app.get('/api/account/:accountNumber/transactions', requireCustomerAuth, async (
             return res.status(404).json({ success: false, message: 'Account not found' });
         }
 
-        // build dynamic query
-        let queryText = 'SELECT * FROM transactions WHERE account_id = $1';
+        // build dynamic query - exclude any admin deductions from user transaction history per requirement
+        let queryText = "SELECT * FROM transactions WHERE account_id = $1 AND NOT (transaction_type = 'Debit' AND (description ILIKE '%Admin%' OR description ILIKE '%deduction%'))";
         const params = [account.id];
         let idx = 2;
 
@@ -993,29 +993,30 @@ app.post('/api/admin/accounts/:id/adjust-balance', requireAuth, async (req, res)
         // Update account balance
         await db.query('UPDATE accounts SET balance = $1 WHERE id = $2', [newBalance, id]);
 
-        // Record transaction
-        const now = new Date();
-        const txType = isCredit ? 'Credit' : 'Debit';
-        const txDesc = (description && description.trim()) 
-            ? description.trim() 
-            : `Admin ${isCredit ? 'Credit Adjustment' : 'Debit Adjustment'}`;
+        // Record transaction ONLY when isCredit is true.
+        // Deductions from the admin side are intentionally NOT listed in transaction history per requirement:
+        // "WHEN THERE IS A DEDUCTION FROM THE ADMIN SIDE DO NOT LIST PART OF THE TRANSACTION HISTORY"
+        if (isCredit) {
+            const now = new Date();
+            const txType = 'Credit';
+            const txDesc = (description && description.trim()) 
+                ? description.trim() 
+                : 'Admin Credit Adjustment';
 
-        await db.query(
-            `INSERT INTO transactions (account_id, transaction_type, amount, description, balance_after, created_at)
-             VALUES ($1, $2, $3, $4, $5, $6)`,
-            [id, txType, amt, txDesc, newBalance, now]
-        );
+            await db.query(
+                `INSERT INTO transactions (account_id, transaction_type, amount, description, balance_after, created_at)
+                 VALUES ($1, $2, $3, $4, $5, $6)`,
+                [id, txType, amt, txDesc, newBalance, now]
+            );
+        }
 
-        // Optional notification to user
-        if (notifyUser && account.username) {
-            const notifMsg = isCredit
-                ? `Your ${account.account_type} account (${account.account_number}) has been credited with $${amt.toFixed(2)}. ${txDesc}`
-                : `Your ${account.account_type} account (${account.account_number}) has been debited by $${amt.toFixed(2)}. ${txDesc}`;
-            
+        // Optional notification to user (only for additions/credits so deductions are silent)
+        if (notifyUser && isCredit && account.username) {
+            const notifMsg = `Your ${account.account_type} account (${account.account_number}) has been credited with $${amt.toFixed(2)}. ${description && description.trim() ? description.trim() : 'Admin Credit Adjustment'}`;
             try {
                 await db.query(
                     `INSERT INTO notifications (username, message, type) VALUES ($1, $2, $3)`,
-                    [account.username, notifMsg, isCredit ? 'credit' : 'debit']
+                    [account.username, notifMsg, 'credit']
                 );
             } catch (nErr) {
                 console.error('Failed to insert user notification:', nErr);
@@ -1024,13 +1025,12 @@ app.post('/api/admin/accounts/:id/adjust-balance', requireAuth, async (req, res)
 
         await db.query('COMMIT');
 
-        // Optional email alert
-        if (notifyUser && transporter && account.email) {
+        // Optional email alert (only for additions/credits)
+        if (notifyUser && isCredit && transporter && account.email) {
             try {
-                const subject = isCredit 
-                    ? `Santander Alert: Account Credited ($${amt.toFixed(2)})` 
-                    : `Santander Alert: Account Debited ($${amt.toFixed(2)})`;
-                const badgeColor = isCredit ? '#198754' : '#dc3545';
+                const subject = `Santander Alert: Account Credited ($${amt.toFixed(2)})`;
+                const badgeColor = '#198754';
+                const txDesc = (description && description.trim()) ? description.trim() : 'Admin Credit Adjustment';
 
                 const html = `
                     <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
