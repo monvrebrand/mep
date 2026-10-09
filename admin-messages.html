@@ -446,14 +446,251 @@
       font-size: 15px;
     }
 
+    /* Account Management Card Grid & Modern List Styles */
+    .account-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      margin-bottom: 25px;
+    }
+    .account-card-item {
+      background: #ffffff;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .account-card-item:hover {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+      border-color: #cbd5e1;
+    }
+    .account-card-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #dc3545, #ef4444);
+    }
+    .account-card-item.type-savings::before {
+      background: linear-gradient(90deg, #3b82f6, #6366f1);
+    }
+    .account-card-item.type-current::before {
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+    .account-card-item.type-business::before {
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+
+    .account-avatar-circle {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1e293b, #475569);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .account-avatar-circle.theme-savings {
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+    }
+    .account-avatar-circle.theme-current {
+      background: linear-gradient(135deg, #059669, #10b981);
+    }
+    .account-avatar-circle.theme-business {
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+    }
+
+    .account-balance-hero {
+      background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin: 12px 0 14px 0;
+    }
+    .account-balance-hero .balance-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .account-balance-hero .balance-val {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    .account-balance-hero .balance-val.positive {
+      color: #047857;
+    }
+
+    .account-card-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+      margin-top: auto;
+    }
+    .account-btn-add {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff !important;
+      border: none;
+      font-weight: 600;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.25);
+      transition: all 0.15s ease;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .account-btn-add:hover {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35);
+      transform: translateY(-1px);
+    }
+    .account-btn-reduce {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: #ffffff !important;
+      border: none;
+      font-weight: 600;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      box-shadow: 0 2px 4px rgba(239, 68, 68, 0.25);
+      transition: all 0.15s ease;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .account-btn-reduce:hover {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+      box-shadow: 0 4px 10px rgba(239, 68, 68, 0.35);
+      transform: translateY(-1px);
+    }
+    .account-btn-history {
+      background: #ffffff;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .account-btn-history:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+      color: #1e293b;
+    }
+
+    /* Modern Table Styles */
+    .modern-account-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+      margin-top: -8px;
+    }
+    .modern-account-table thead th {
+      border: none;
+      background: transparent;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 6px 14px;
+    }
+    .modern-account-table tbody tr {
+      background: #ffffff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      border-radius: 10px;
+      transition: all 0.15s ease;
+    }
+    .modern-account-table tbody tr:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+      background-color: #fbfcfe;
+    }
+    .modern-account-table tbody td {
+      border: 1px solid #f1f5f9;
+      border-width: 1px 0;
+      padding: 12px 14px;
+      vertical-align: middle;
+      background: inherit;
+    }
+    .modern-account-table tbody td:first-child {
+      border-left-width: 1px;
+      border-top-left-radius: 10px;
+      border-bottom-left-radius: 10px;
+    }
+    .modern-account-table tbody td:last-child {
+      border-right-width: 1px;
+      border-top-right-radius: 10px;
+      border-bottom-right-radius: 10px;
+    }
+
+    /* View Switcher Controls */
+    .view-switcher-group {
+      display: inline-flex;
+      background: #f1f5f9;
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    .view-mode-btn {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    .view-mode-btn.active {
+      background: #ffffff;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
     /* Responsive Table Styles */
     .accounts-table-responsive {
       width: 100%;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
-    }
-    .accounts-table-responsive table {
-      min-width: 680px;
+      padding-bottom: 8px;
     }
 
     /* Mobile & Tablet Fine-tuning */
@@ -485,6 +722,25 @@
       .tab-button {
         padding: 8px 12px;
         font-size: 13.5px;
+      }
+
+      /* Account cards on mobile */
+      .account-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .account-card-item {
+        padding: 15px;
+      }
+      .account-card-actions {
+        grid-template-columns: 1fr 1fr;
+      }
+      .account-card-actions .account-btn-history {
+        grid-column: span 2;
+        width: 100%;
+      }
+      .account-balance-hero .balance-val {
+        font-size: 20px;
       }
 
       /* Modals on mobile */
@@ -747,20 +1003,29 @@
 
       <!-- Account Management Tab -->
       <div id="account-management" class="tab-content">
-        <div class="d-flex justify-content-between align-items-center mb-4 mt-2 flex-wrap gap-2">
+        <div class="d-flex justify-content-between align-items-center mb-3 mt-2 flex-wrap gap-2">
           <div>
             <h4 class="fw-bold mb-1"><i class="bi bi-wallet2 text-danger me-2"></i>User Account Balances</h4>
             <p class="text-muted small mb-0">Deposit (credit) or deduct (debit) funds across all registered customer accounts.</p>
           </div>
-          <div class="d-flex gap-2">
+          <div class="d-flex align-items-center gap-2">
+            <!-- View Switcher -->
+            <div class="view-switcher-group">
+              <button class="view-mode-btn active" id="viewModeCardsBtn" onclick="setAccountViewMode('cards')" title="Card Grid View">
+                <i class="bi bi-grid-fill"></i> <span class="d-none d-sm-inline">Cards</span>
+              </button>
+              <button class="view-mode-btn" id="viewModeTableBtn" onclick="setAccountViewMode('table')" title="Table View">
+                <i class="bi bi-table"></i> <span class="d-none d-sm-inline">Table</span>
+              </button>
+            </div>
             <button class="btn btn-danger btn-sm" onclick="loadAdminAccounts()">
-              <i class="bi bi-arrow-clockwise"></i> Refresh Accounts
+              <i class="bi bi-arrow-clockwise"></i> Refresh
             </button>
           </div>
         </div>
 
         <!-- Account Statistics -->
-        <div class="stats mb-4">
+        <div class="stats mb-3">
           <div class="stat-box">
             <div class="stat-number text-dark" id="totalAdminAccountsCount">0</div>
             <div class="stat-label">Total Accounts</div>
@@ -777,7 +1042,7 @@
 
         <!-- Controls / Search & Filters -->
         <div class="row g-2 mb-3 align-items-center">
-          <div class="col-md-5">
+          <div class="col-md-5 col-12">
             <div class="input-group">
               <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
               <input 
@@ -789,15 +1054,15 @@
               >
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-3 col-6">
             <select class="form-select" id="accountTypeFilter" onchange="filterAdminAccounts()">
               <option value="">All Account Types</option>
               <option value="Current">Current Account</option>
-              <option value="Savings">Savings Account</option>
+              <option value="Savings">Savings Account / ISA</option>
               <option value="Business">Business Account</option>
             </select>
           </div>
-          <div class="col-md-4">
+          <div class="col-md-4 col-6">
             <select class="form-select" id="accountSortFilter" onchange="filterAdminAccounts()">
               <option value="balance-desc">Sort by: Highest Balance</option>
               <option value="balance-asc">Sort by: Lowest Balance</option>
@@ -807,32 +1072,40 @@
           </div>
         </div>
 
-        <!-- Accounts Table -->
-        <div class="table-responsive bg-white rounded shadow-sm border accounts-table-responsive">
-          <div class="d-md-none text-muted small p-2 bg-light border-bottom text-center">
-            <i class="bi bi-arrows-expand me-1"></i> Swipe horizontally to view all fields & action buttons
+        <!-- View 1: Card Grid View (Default & Mobile Friendly) -->
+        <div id="adminAccountsCardsContainer">
+          <div class="account-cards-grid" id="adminAccountsCardsList">
+            <div class="text-center text-muted py-5 bg-white rounded border w-100" style="grid-column: 1 / -1;">
+              <div class="spinner-border text-danger spinner-border-sm me-2" role="status"></div>
+              Loading accounts...
+            </div>
           </div>
-          <table class="table table-hover align-middle mb-0" style="min-width: 680px;">
-            <thead class="table-light">
-              <tr>
-                <th>Customer</th>
-                <th>Contact</th>
-                <th>Account Type</th>
-                <th>Account Number</th>
-                <th>Status</th>
-                <th class="text-end">Current Balance</th>
-                <th class="text-center" style="width: 220px; white-space: nowrap;">Manage Balance</th>
-              </tr>
-            </thead>
-            <tbody id="adminAccountsList">
-              <tr>
-                <td colspan="7" class="text-center text-muted py-5">
-                  <div class="spinner-border text-danger spinner-border-sm me-2" role="status"></div>
-                  Loading accounts...
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        </div>
+
+        <!-- View 2: Modern Table View -->
+        <div id="adminAccountsTableContainer" style="display: none;">
+          <div class="accounts-table-responsive">
+            <table class="modern-account-table" style="min-width: 680px;">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Account Type</th>
+                  <th>Account Number</th>
+                  <th>Status</th>
+                  <th class="text-end">Current Balance</th>
+                  <th class="text-center" style="width: 220px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminAccountsTableBody">
+                <tr>
+                  <td colspan="6" class="text-center text-muted py-5 bg-white">
+                    <div class="spinner-border text-danger spinner-border-sm me-2" role="status"></div>
+                    Loading accounts...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div> <!-- End account-management tab -->
 
@@ -1157,6 +1430,8 @@
   <script>
     let allMessages = [];
     let allRegistrations = [];
+    let allAdminAccounts = [];
+    let currentAccountViewMode = localStorage.getItem('adminAccountViewMode') || 'cards';
     let currentMessageId = null;
     let adminToken = null;
 
@@ -1180,8 +1455,6 @@
       
       // Search functionality
       document.getElementById('searchInput').addEventListener('keyup', filterMessages);
-
-      loadMessages();
       
       // Load chat sessions
       loadChatSessions();
@@ -1201,6 +1474,20 @@
           loadChatMessages(currentChatSessionId);
         }
       }, 4000); // Poll every 4 seconds
+
+      // Set initial view mode preference
+      if (typeof setAccountViewMode === 'function') {
+        setAccountViewMode(currentAccountViewMode);
+      }
+
+      // Pre-load accounts so Account Balances tab is ready immediately
+      loadAdminAccounts();
+
+      // Check URL hash to switch to the right tab if linked directly (e.g. #account-management)
+      const initialHash = window.location.hash ? window.location.hash.substring(1) : '';
+      if (initialHash && document.getElementById(initialHash)) {
+        switchTab(initialHash);
+      }
 
       // Request browser notification permission on page load
       if ('Notification' in window && Notification.permission === 'default') {
@@ -1225,6 +1512,11 @@
       const clickedBtn = (window.event && (window.event.currentTarget || (window.event.target && window.event.target.closest('.tab-button')))) 
         || document.querySelector(`[onclick*="'${tabName}'"]`);
       if (clickedBtn) clickedBtn.classList.add('active');
+
+      // Update URL hash without jumping page
+      try {
+        history.replaceState(null, null, '#' + tabName);
+      } catch (e) {}
 
       // Load data for the selected tab
       if (tabName === 'live-chat') {
@@ -2255,9 +2547,32 @@
     // ==========================================
     // ACCOUNT BALANCES MANAGEMENT MODULE
     // ==========================================
-    let allAdminAccounts = [];
     let currentAdjustAccount = null;
     let currentAdjustAction = 'add'; // 'add' or 'reduce'
+
+    function setAccountViewMode(mode) {
+      currentAccountViewMode = mode;
+      try {
+        localStorage.setItem('adminAccountViewMode', mode);
+      } catch (e) {}
+
+      const cardsBtn = document.getElementById('viewModeCardsBtn');
+      const tableBtn = document.getElementById('viewModeTableBtn');
+      const cardsContainer = document.getElementById('adminAccountsCardsContainer');
+      const tableContainer = document.getElementById('adminAccountsTableContainer');
+
+      if (mode === 'cards') {
+        cardsBtn?.classList.add('active');
+        tableBtn?.classList.remove('active');
+        if (cardsContainer) cardsContainer.style.display = 'block';
+        if (tableContainer) tableContainer.style.display = 'none';
+      } else {
+        cardsBtn?.classList.remove('active');
+        tableBtn?.classList.add('active');
+        if (cardsContainer) cardsContainer.style.display = 'none';
+        if (tableContainer) tableContainer.style.display = 'block';
+      }
+    }
 
     async function loadAdminAccounts() {
       try {
@@ -2284,10 +2599,18 @@
         }
       } catch (err) {
         console.error('Error loading admin accounts:', err);
-        const list = document.getElementById('adminAccountsList');
-        if (list) {
-          list.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4"><i class="bi bi-exclamation-circle me-1"></i> Failed to load accounts. Please try refreshing.</td></tr>';
-        }
+        const cardsList = document.getElementById('adminAccountsCardsList');
+        const tableBody = document.getElementById('adminAccountsTableBody');
+        const errorHtml = `
+          <div class="text-center text-danger py-4 bg-white rounded border w-100" style="grid-column: 1 / -1;">
+            <i class="bi bi-exclamation-triangle-fill fs-2 d-block mb-2"></i>
+            <strong>Failed to load accounts.</strong>
+            <p class="small text-muted mb-2">Please check your connection or refresh the page.</p>
+            <button class="btn btn-sm btn-outline-danger" onclick="loadAdminAccounts()">Retry</button>
+          </div>
+        `;
+        if (cardsList) cardsList.innerHTML = errorHtml;
+        if (tableBody) tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Failed to load accounts.</td></tr>';
       }
     }
 
@@ -2337,74 +2660,225 @@
     }
 
     function displayAdminAccounts(accounts) {
-      const list = document.getElementById('adminAccountsList');
-      if (!list) return;
+      const cardsList = document.getElementById('adminAccountsCardsList');
+      const tableBody = document.getElementById('adminAccountsTableBody');
 
       if (!accounts || accounts.length === 0) {
-        list.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-5"><i class="bi bi-wallet2 fs-2 d-block mb-2"></i>No accounts found matching your criteria</td></tr>';
+        const emptyHtml = `
+          <div class="text-center text-muted py-5 bg-white rounded border w-100" style="grid-column: 1 / -1;">
+            <i class="bi bi-wallet2 fs-1 text-secondary d-block mb-2"></i>
+            <h6 class="fw-bold text-dark">No Accounts Found</h6>
+            <p class="small text-muted mb-0">No bank accounts match your search or filter criteria.</p>
+          </div>
+        `;
+        if (cardsList) cardsList.innerHTML = emptyHtml;
+        if (tableBody) tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-5 bg-white"><i class="bi bi-wallet2 fs-2 d-block mb-2"></i>No accounts found matching your criteria</td></tr>`;
         return;
       }
 
-      list.innerHTML = accounts.map(acc => {
-        const bal = parseFloat(acc.balance || 0);
-        const formattedBal = bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const fullName = `${acc.firstname || ''} ${acc.surname || ''}`.trim();
-        
-        let statusBadge = '<span class="badge bg-success">Active</span>';
-        if (acc.user_status === 'suspended') statusBadge = '<span class="badge bg-warning text-dark">Suspended</span>';
-        if (acc.user_status === 'blocked') statusBadge = '<span class="badge bg-dark">Blocked</span>';
-        if (acc.user_status === 'rejected') statusBadge = '<span class="badge bg-danger">Rejected</span>';
+      // Render Cards (Responsive Grid)
+      if (cardsList) {
+        cardsList.innerHTML = accounts.map(acc => {
+          const bal = parseFloat(acc.balance || 0);
+          const formattedBal = bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const fullName = `${acc.firstname || ''} ${acc.surname || ''}`.trim() || 'Valued Customer';
+          
+          const firstI = (acc.firstname || 'U')[0].toUpperCase();
+          const lastI = (acc.surname || '') ? (acc.surname || '')[0].toUpperCase() : '';
+          const initials = `${firstI}${lastI}` || 'AC';
 
-        return `
-          <tr>
-            <td>
-              <div class="fw-bold">${escapeHtml(fullName || 'Unknown')}</div>
-              <small class="text-muted">@${escapeHtml(acc.username || 'user')}</small>
-            </td>
-            <td>
-              <div>${escapeHtml(acc.email || 'N/A')}</div>
-              <small class="text-muted">${escapeHtml(acc.phone || '')}</small>
-            </td>
-            <td>
-              <span class="badge bg-light text-dark border">${escapeHtml(acc.account_type || 'Account')}</span>
-            </td>
-            <td>
-              <span class="font-monospace bg-light px-2 py-1 rounded border">
-                ${escapeHtml(acc.account_number)}
-              </span>
-              <button class="btn btn-sm btn-link text-muted p-0 ms-1" onclick="copyToClipboard('${escapeHtml(acc.account_number)}')" title="Copy Account Number">
-                <i class="bi bi-clipboard"></i>
-              </button>
-            </td>
-            <td>${statusBadge}</td>
-            <td class="text-end">
-              <span class="fw-bold fs-6 ${bal > 0 ? 'text-success' : 'text-dark'}">$${formattedBal}</span>
-            </td>
-            <td class="text-center">
-              <div class="btn-group btn-group-sm">
-                <button class="btn btn-success" onclick="openAdjustBalanceModal(${acc.id}, 'add')" title="Add money into this account">
-                  <i class="bi bi-plus-lg me-1"></i> Add
+          let typeClass = 'current';
+          let typeBadgeClass = 'bg-success bg-opacity-10 text-success border border-success border-opacity-25';
+          const accType = (acc.account_type || '').toLowerCase();
+          if (accType.includes('saving') || accType.includes('isa')) {
+            typeClass = 'savings';
+            typeBadgeClass = 'bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25';
+          } else if (accType.includes('business')) {
+            typeClass = 'business';
+            typeBadgeClass = 'bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50';
+          }
+
+          let statusBadge = '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25"><i class="bi bi-check-circle-fill me-1"></i>Active</span>';
+          if (acc.user_status === 'suspended') {
+            statusBadge = '<span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50"><i class="bi bi-exclamation-triangle-fill me-1"></i>Suspended</span>';
+          } else if (acc.user_status === 'blocked') {
+            statusBadge = '<span class="badge bg-dark text-white"><i class="bi bi-slash-circle me-1"></i>Blocked</span>';
+          } else if (acc.user_status === 'rejected') {
+            statusBadge = '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25"><i class="bi bi-x-circle-fill me-1"></i>Rejected</span>';
+          }
+
+          return `
+            <div class="account-card-item type-${typeClass}">
+              <div>
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="account-avatar-circle theme-${typeClass}">
+                      ${initials}
+                    </div>
+                    <div>
+                      <div class="fw-bold text-dark text-truncate" style="max-width: 170px;" title="${escapeHtml(fullName)}">
+                        ${escapeHtml(fullName)}
+                      </div>
+                      <small class="text-muted">@${escapeHtml(acc.username || 'user')}</small>
+                    </div>
+                  </div>
+                  <div class="d-flex flex-column align-items-end gap-1">
+                    ${statusBadge}
+                    <span class="badge ${typeBadgeClass} small">${escapeHtml(acc.account_type || 'Account')}</span>
+                  </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center py-1 px-2 bg-light rounded border mb-2">
+                  <div class="d-flex align-items-center gap-1">
+                    <small class="text-muted me-1 font-monospace">ACC #</small>
+                    <code class="fw-bold text-dark fs-6">${escapeHtml(acc.account_number)}</code>
+                  </div>
+                  <button class="btn btn-sm btn-white border py-0 px-2 bg-white" onclick="copyToClipboard('${escapeHtml(acc.account_number)}', this)" title="Copy Account Number">
+                    <i class="bi bi-clipboard me-1 text-muted"></i><small>Copy</small>
+                  </button>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center text-muted small mb-2 text-truncate">
+                  <span class="text-truncate" title="${escapeHtml(acc.email || '')}">
+                    <i class="bi bi-envelope me-1"></i>${escapeHtml(acc.email || 'No email')}
+                  </span>
+                  ${acc.phone ? `<span class="ms-1"><i class="bi bi-telephone me-1"></i>${escapeHtml(acc.phone)}</span>` : ''}
+                </div>
+
+                <div class="account-balance-hero">
+                  <div class="balance-label">
+                    <span>Available Balance</span>
+                    <i class="bi bi-shield-check text-success"></i>
+                  </div>
+                  <div class="balance-val ${bal > 0 ? 'positive' : ''}">
+                    $${formattedBal}
+                  </div>
+                </div>
+              </div>
+
+              <div class="account-card-actions">
+                <button class="account-btn-add" onclick="openAdjustBalanceModal(${acc.id}, 'add')" title="Deposit / Credit funds to this account">
+                  <i class="bi bi-plus-circle-fill"></i> Add Funds
                 </button>
-                <button class="btn btn-danger" onclick="openAdjustBalanceModal(${acc.id}, 'reduce')" title="Reduce money from this account">
-                  <i class="bi bi-dash-lg me-1"></i> Reduce
+                <button class="account-btn-reduce" onclick="openAdjustBalanceModal(${acc.id}, 'reduce')" title="Deduct / Debit funds from this account">
+                  <i class="bi bi-dash-circle-fill"></i> Reduce
                 </button>
-                <button class="btn btn-outline-secondary" onclick="openAccountHistoryModal(${acc.id})" title="View transaction logs">
+                <button class="account-btn-history" onclick="openAccountHistoryModal(${acc.id})" title="View transaction logs">
                   <i class="bi bi-clock-history"></i>
                 </button>
               </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Render Modern Table Rows
+      if (tableBody) {
+        tableBody.innerHTML = accounts.map(acc => {
+          const bal = parseFloat(acc.balance || 0);
+          const formattedBal = bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const fullName = `${acc.firstname || ''} ${acc.surname || ''}`.trim() || 'Valued Customer';
+          const firstI = (acc.firstname || 'U')[0].toUpperCase();
+          const lastI = (acc.surname || '') ? (acc.surname || '')[0].toUpperCase() : '';
+          const initials = `${firstI}${lastI}` || 'AC';
+
+          let typeClass = 'current';
+          let typeBadgeClass = 'bg-success bg-opacity-10 text-success border border-success border-opacity-25';
+          const accType = (acc.account_type || '').toLowerCase();
+          if (accType.includes('saving') || accType.includes('isa')) {
+            typeClass = 'savings';
+            typeBadgeClass = 'bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25';
+          } else if (accType.includes('business')) {
+            typeClass = 'business';
+            typeBadgeClass = 'bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50';
+          }
+
+          let statusBadge = '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Active</span>';
+          if (acc.user_status === 'suspended') statusBadge = '<span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-50">Suspended</span>';
+          if (acc.user_status === 'blocked') statusBadge = '<span class="badge bg-dark">Blocked</span>';
+          if (acc.user_status === 'rejected') statusBadge = '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Rejected</span>';
+
+          return `
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="account-avatar-circle theme-${typeClass}" style="width: 36px; height: 36px; font-size: 13px;">
+                    ${initials}
+                  </div>
+                  <div>
+                    <div class="fw-bold text-dark">${escapeHtml(fullName)}</div>
+                    <small class="text-muted">@${escapeHtml(acc.username || 'user')} &bull; ${escapeHtml(acc.email || '')}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge ${typeBadgeClass}">${escapeHtml(acc.account_type || 'Account')}</span>
+              </td>
+              <td>
+                <div class="d-flex align-items-center gap-1">
+                  <code class="fw-bold text-dark bg-light px-2 py-1 rounded border">${escapeHtml(acc.account_number)}</code>
+                  <button class="btn btn-sm btn-link text-muted p-0 ms-1" onclick="copyToClipboard('${escapeHtml(acc.account_number)}', this)" title="Copy Account Number">
+                    <i class="bi bi-clipboard"></i>
+                  </button>
+                </div>
+              </td>
+              <td>${statusBadge}</td>
+              <td class="text-end">
+                <span class="fw-bold fs-6 ${bal > 0 ? 'text-success' : 'text-dark'}">$${formattedBal}</span>
+              </td>
+              <td class="text-center">
+                <div class="d-inline-flex gap-1">
+                  <button class="account-btn-add py-1 px-2" style="font-size: 12px;" onclick="openAdjustBalanceModal(${acc.id}, 'add')" title="Add Funds">
+                    <i class="bi bi-plus-lg"></i> Add
+                  </button>
+                  <button class="account-btn-reduce py-1 px-2" style="font-size: 12px;" onclick="openAdjustBalanceModal(${acc.id}, 'reduce')" title="Reduce Funds">
+                    <i class="bi bi-dash-lg"></i> Reduce
+                  </button>
+                  <button class="account-btn-history py-1 px-2" style="font-size: 12px;" onclick="openAccountHistoryModal(${acc.id})" title="History">
+                    <i class="bi bi-clock-history"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
     }
 
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        // Feedback toast or small alert
-        const originalTitle = document.title;
-        document.title = 'Copied!';
-        setTimeout(() => { document.title = originalTitle; }, 1000);
-      }).catch(err => console.error('Copy failed:', err));
+    function copyToClipboard(text, btnElement) {
+      const showSuccess = () => {
+        if (btnElement) {
+          const origHtml = btnElement.innerHTML;
+          btnElement.innerHTML = '<i class="bi bi-check-lg text-success"></i> <small class="text-success fw-bold">Copied!</small>';
+          setTimeout(() => { btnElement.innerHTML = origHtml; }, 1500);
+        }
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(showSuccess).catch(err => {
+          fallbackCopyText(text);
+          showSuccess();
+        });
+      } else {
+        fallbackCopyText(text);
+        showSuccess();
+      }
+    }
+
+    function fallbackCopyText(text) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch (err) {
+        console.error('Fallback copy failed:', err);
+      }
     }
 
     // Helper to safely parse numbers with commas, currency symbols, etc.
