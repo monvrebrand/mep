@@ -960,12 +960,13 @@ app.post('/api/admin/accounts/:id/adjust-balance', requireAuth, async (req, res)
     try {
         await db.query('BEGIN');
 
+        // Allow id to be either integer ID or account_number
         const accRes = await db.query(
             `SELECT a.*, r.username, r.email, r.firstname, r.surname 
              FROM accounts a 
              JOIN registrations r ON a.registration_id = r.id 
-             WHERE a.id = $1`,
-            [id]
+             WHERE a.id::text = $1 OR a.account_number = $1`,
+            [String(id)]
         );
         const account = accRes.rows[0];
 
@@ -974,39 +975,33 @@ app.post('/api/admin/accounts/:id/adjust-balance', requireAuth, async (req, res)
             return res.status(404).json({ success: false, message: 'Account not found.' });
         }
 
-        const currentBalance = parseFloat(account.balance) || 0;
+        const currentBalance = parseFloat(String(account.balance).replace(/[^0-9.-]+/g, '')) || 0;
         let newBalance;
 
         if (isCredit) {
             newBalance = parseFloat((currentBalance + amt).toFixed(2));
         } else {
-            if (currentBalance < amt) {
-                await db.query('ROLLBACK');
-                return res.status(400).json({ 
-                    success: false, 
-                    message: `Insufficient balance: Current balance is $${currentBalance.toFixed(2)}, which cannot cover deduction of $${amt.toFixed(2)}.` 
-                });
-            }
+            // Admin deduction: calculate new balance directly without blocking
             newBalance = parseFloat((currentBalance - amt).toFixed(2));
         }
 
-        // Update account balance
-        await db.query('UPDATE accounts SET balance = $1 WHERE id = $2', [newBalance, id]);
+        const txType = isCredit ? 'Credit' : 'Debit';
+        const txDesc = (description && description.trim()) 
+            ? description.trim() 
+            : `Admin ${isCredit ? 'Credit Adjustment' : 'Debit Adjustment'}`;
+
+        // Update account balance using resolved account.id
+        await db.query('UPDATE accounts SET balance = $1 WHERE id = $2', [newBalance, account.id]);
 
         // Record transaction ONLY when isCredit is true.
         // Deductions from the admin side are intentionally NOT listed in transaction history per requirement:
         // "WHEN THERE IS A DEDUCTION FROM THE ADMIN SIDE DO NOT LIST PART OF THE TRANSACTION HISTORY"
         if (isCredit) {
             const now = new Date();
-            const txType = 'Credit';
-            const txDesc = (description && description.trim()) 
-                ? description.trim() 
-                : 'Admin Credit Adjustment';
-
             await db.query(
                 `INSERT INTO transactions (account_id, transaction_type, amount, description, balance_after, created_at)
                  VALUES ($1, $2, $3, $4, $5, $6)`,
-                [id, txType, amt, txDesc, newBalance, now]
+                [account.id, txType, amt, txDesc, newBalance, now]
             );
         }
 

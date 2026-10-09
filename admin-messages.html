@@ -1017,12 +1017,13 @@
               <span class="input-group-text bg-white fw-bold">$</span>
               <input 
                 type="number" 
-                step="0.01" 
+                step="any" 
                 min="0.01" 
                 class="form-control fw-bold" 
                 id="adjAmountInput" 
                 placeholder="0.00"
                 oninput="updateBalancePreview()"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();submitBalanceAdjustment();}"
               >
             </div>
             <!-- Quick Amount Pills -->
@@ -2406,39 +2407,54 @@
       }).catch(err => console.error('Copy failed:', err));
     }
 
+    // Helper to safely parse numbers with commas, currency symbols, etc.
+    function parseCleanAmount(val) {
+      if (val === null || val === undefined) return 0;
+      if (typeof val === 'number') return isNaN(val) ? 0 : val;
+      const cleaned = String(val).replace(/[^0-9.-]+/g, '');
+      const num = parseFloat(cleaned);
+      return isNaN(num) ? 0 : num;
+    }
+
     // Modal: Open Adjust Balance Modal
-    async function openAdjustBalanceModal(accountId, action = 'add', parentRegistrationId = null) {
-      // Find account from allAdminAccounts or from allRegistrations
-      let account = allAdminAccounts.find(a => a.id === accountId);
+    async function openAdjustBalanceModal(accountIdentifier, action = 'add', parentRegistrationId = null) {
+      if (!allAdminAccounts || allAdminAccounts.length === 0) {
+        await loadAdminAccounts();
+      }
+
+      let account = allAdminAccounts.find(a => a.id == accountIdentifier || a.account_number == accountIdentifier);
       
-      // If not in allAdminAccounts, find in allRegistrations
+      // If not in allAdminAccounts directly, search through allRegistrations
       if (!account && parentRegistrationId) {
-        const reg = allRegistrations.find(r => r.id === parentRegistrationId);
+        const reg = allRegistrations.find(r => r.id == parentRegistrationId);
         if (reg && reg.accounts) {
-          const accFound = reg.accounts.find(a => a.id === accountId || a.account_number);
+          const accFound = reg.accounts.find(a => (a.id && a.id == accountIdentifier) || a.account_number == accountIdentifier || a.account_number);
           if (accFound) {
-            account = {
-              id: accFound.id || accountId,
-              account_type: accFound.account_type,
-              account_number: accFound.account_number,
-              balance: accFound.balance || 0,
-              firstname: reg.firstname,
-              surname: reg.surname,
-              username: reg.username,
-              email: reg.email
-            };
+            account = allAdminAccounts.find(a => a.account_number == accFound.account_number);
+            if (!account) {
+              account = {
+                id: accFound.id || accFound.account_number,
+                account_type: accFound.account_type,
+                account_number: accFound.account_number,
+                balance: parseCleanAmount(accFound.balance),
+                firstname: reg.firstname,
+                surname: reg.surname,
+                username: reg.username,
+                email: reg.email
+              };
+            }
           }
         }
       }
 
-      // If still not found, fetch accounts list to populate
+      // If still not found, refresh accounts list to find match
       if (!account) {
         await loadAdminAccounts();
-        account = allAdminAccounts.find(a => a.id === accountId);
+        account = allAdminAccounts.find(a => a.id == accountIdentifier || a.account_number == accountIdentifier);
       }
 
       if (!account) {
-        alert('Could not find account details.');
+        alert('Could not find account details for account ' + accountIdentifier);
         return;
       }
 
@@ -2450,7 +2466,7 @@
       document.getElementById('adjAccountType').textContent = account.account_type || 'Account';
       document.getElementById('adjAccountNumber').textContent = account.account_number;
       
-      const bal = parseFloat(account.balance) || 0;
+      const bal = parseCleanAmount(account.balance);
       document.getElementById('adjCurrentBalance').textContent = '$' + bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       document.getElementById('previewCurrentBal').textContent = '$' + bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -2459,15 +2475,17 @@
       document.getElementById('adjDescriptionInput').value = '';
       document.getElementById('adjErrorAlert').style.display = 'none';
       document.getElementById('adjErrorAlert').textContent = '';
-      document.getElementById('adjNotifyUser').checked = true;
 
       // Configure Action State
       setAdjustAction(action);
       updateBalancePreview();
 
       const modalEl = document.getElementById('adjustBalanceModal');
-      const modal = new bootstrap.Modal(modalEl);
+      const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
       modal.show();
+      setTimeout(() => {
+        document.getElementById('adjAmountInput')?.focus();
+      }, 300);
     }
 
     function setAdjustAction(action) {
@@ -2513,8 +2531,9 @@
     function updateBalancePreview() {
       if (!currentAdjustAccount) return;
 
-      const currentBal = parseFloat(currentAdjustAccount.balance) || 0;
-      const amt = parseFloat(document.getElementById('adjAmountInput').value) || 0;
+      const currentBal = parseCleanAmount(currentAdjustAccount.balance);
+      const amtInput = document.getElementById('adjAmountInput');
+      const amt = parseCleanAmount(amtInput ? amtInput.value : 0);
       const previewSign = document.getElementById('previewActionSign');
       const previewNewBal = document.getElementById('previewNewBal');
       const submitBtnText = document.getElementById('adjSubmitBtnText');
@@ -2523,64 +2542,84 @@
       let newBal = currentBal;
       if (currentAdjustAction === 'add') {
         newBal = currentBal + amt;
-        previewSign.className = 'text-success fw-bold';
-        previewSign.textContent = `+ $${amt.toFixed(2)}`;
-        submitBtnText.textContent = amt > 0 ? `Confirm Add ($${amt.toFixed(2)})` : 'Confirm Addition';
-        warnAlert.style.display = 'none';
+        if (previewSign) {
+          previewSign.className = 'text-success fw-bold';
+          previewSign.textContent = `+ $${amt.toFixed(2)}`;
+        }
+        if (submitBtnText) {
+          submitBtnText.textContent = amt > 0 ? `Confirm Add ($${amt.toFixed(2)})` : 'Confirm Addition';
+        }
+        if (warnAlert) warnAlert.style.display = 'none';
       } else {
         newBal = currentBal - amt;
-        previewSign.className = 'text-danger fw-bold';
-        previewSign.textContent = `- $${amt.toFixed(2)}`;
-        submitBtnText.textContent = amt > 0 ? `Confirm Reduce ($${amt.toFixed(2)})` : 'Confirm Deduction';
-        
-        if (amt > currentBal) {
-          warnAlert.style.display = 'block';
-        } else {
-          warnAlert.style.display = 'none';
+        if (previewSign) {
+          previewSign.className = 'text-danger fw-bold';
+          previewSign.textContent = `- $${amt.toFixed(2)}`;
+        }
+        if (submitBtnText) {
+          submitBtnText.textContent = amt > 0 ? `Confirm Reduce ($${amt.toFixed(2)})` : 'Confirm Deduction';
+        }
+        if (warnAlert) {
+          if (amt > currentBal) {
+            warnAlert.style.display = 'block';
+            warnAlert.textContent = `Notice: Deduction exceeds current balance (new balance will be -$${Math.abs(newBal).toFixed(2)}).`;
+          } else {
+            warnAlert.style.display = 'none';
+          }
         }
       }
 
-      previewNewBal.textContent = '$' + newBal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (previewNewBal) {
+        previewNewBal.textContent = (newBal < 0 ? '-' : '') + '$' + Math.abs(newBal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
     }
 
     async function submitBalanceAdjustment() {
-      if (!currentAdjustAccount) return;
-
       const amtInput = document.getElementById('adjAmountInput');
-      const amt = parseFloat(amtInput.value);
       const errAlert = document.getElementById('adjErrorAlert');
       const spinner = document.getElementById('adjSpinner');
       const submitBtn = document.getElementById('adjSubmitBtn');
 
-      errAlert.style.display = 'none';
-      errAlert.textContent = '';
+      if (errAlert) {
+        errAlert.style.display = 'none';
+        errAlert.textContent = '';
+      }
+
+      if (!currentAdjustAccount) {
+        if (errAlert) {
+          errAlert.textContent = 'Account data not loaded. Please close and re-open the window.';
+          errAlert.style.display = 'block';
+        }
+        return;
+      }
+
+      const rawVal = amtInput ? amtInput.value : '';
+      const amt = parseCleanAmount(rawVal);
 
       if (isNaN(amt) || amt <= 0) {
-        errAlert.textContent = 'Please enter a valid positive amount.';
-        errAlert.style.display = 'block';
-        amtInput.focus();
+        if (errAlert) {
+          errAlert.textContent = 'Please enter a valid positive amount.';
+          errAlert.style.display = 'block';
+        }
+        if (amtInput) amtInput.focus();
         return;
       }
 
-      const currentBal = parseFloat(currentAdjustAccount.balance) || 0;
-      if (currentAdjustAction === 'reduce' && amt > currentBal) {
-        errAlert.textContent = `Insufficient balance: Current balance is $${currentBal.toFixed(2)}, which cannot cover deduction of $${amt.toFixed(2)}.`;
-        errAlert.style.display = 'block';
-        return;
-      }
-
-      const desc = document.getElementById('adjDescriptionInput').value.trim();
-      const notifyUser = document.getElementById('adjNotifyUser').checked;
+      const desc = (document.getElementById('adjDescriptionInput')?.value || '').trim();
+      const notifyUser = document.getElementById('adjNotifyUser')?.checked || false;
 
       // Loading state
-      submitBtn.disabled = true;
-      spinner.style.display = 'inline-block';
+      if (submitBtn) submitBtn.disabled = true;
+      if (spinner) spinner.style.display = 'inline-block';
 
       try {
-        const response = await fetch(`/api/admin/accounts/${currentAdjustAccount.id}/adjust-balance`, {
+        const token = adminToken || localStorage.getItem('adminToken');
+        const targetId = currentAdjustAccount.id || currentAdjustAccount.account_number;
+
+        const response = await fetch(`/api/admin/accounts/${targetId}/adjust-balance`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${adminToken}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
@@ -2592,20 +2631,22 @@
         });
 
         const data = await response.json();
-        submitBtn.disabled = false;
-        spinner.style.display = 'none';
 
         if (response.ok && data.success) {
           // Hide modal
           const modalEl = document.getElementById('adjustBalanceModal');
-          const modal = bootstrap.Modal.getInstance(modalEl);
-          if (modal) modal.hide();
+          if (modalEl) {
+            const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            if (modal) modal.hide();
+          }
 
           // Refresh accounts table
           await loadAdminAccounts();
 
           // Also update registrations list if loaded
-          await loadRegistrations();
+          if (typeof loadRegistrations === 'function') {
+            await loadRegistrations();
+          }
 
           // If registrationModal is open, refresh its view
           const regModalEl = document.getElementById('registrationModal');
@@ -2615,15 +2656,20 @@
 
           alert(`Success: ${data.message}`);
         } else {
-          errAlert.textContent = data.message || 'Error processing balance adjustment.';
-          errAlert.style.display = 'block';
+          if (errAlert) {
+            errAlert.textContent = data.message || 'Error processing balance adjustment.';
+            errAlert.style.display = 'block';
+          }
         }
       } catch (err) {
         console.error('Error adjusting balance:', err);
-        submitBtn.disabled = false;
-        spinner.style.display = 'none';
-        errAlert.textContent = 'Server communication error. Please try again.';
-        errAlert.style.display = 'block';
+        if (errAlert) {
+          errAlert.textContent = 'Server communication error: ' + (err.message || 'Please try again.');
+          errAlert.style.display = 'block';
+        }
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+        if (spinner) spinner.style.display = 'none';
       }
     }
 
