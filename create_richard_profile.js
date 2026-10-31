@@ -3,9 +3,9 @@ const bcrypt = require('bcryptjs');
 
 async function createProfile() {
     try {
-        console.log('Creating profile for Richard C Rees...');
+        console.log('Creating profile for Dick-Richard C Rees...');
 
-        const firstname = 'Richard C';
+        const firstname = 'Dick-Richard C';
         const middlename = 'C';
         const surname = 'Rees';
         const email = 'Joanababy181@gmail.com';
@@ -258,7 +258,7 @@ async function createProfile() {
 
         // Add a welcome notification
         // Avoid duplicate notification
-        const notifMsg = 'Welcome back, Richard C Rees. Your Santander Wealth Portfolio is active and up to date.';
+        const notifMsg = 'Welcome back, Dick-Richard C Rees. Your Santander Wealth Portfolio is active and up to date.';
         const existingNotif = await db.query(
             'SELECT id FROM notifications WHERE username = $1 AND message = $2',
             [username, notifMsg]
