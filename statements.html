@@ -71,7 +71,7 @@
                       </div>
                       <div class="col-md-6">
                           <label for="periodSelect" class="form-label">Statement Period</label>
-                          <select id="periodSelect" class="form-select" required disabled>
+                          <select id="periodSelect" class="form-select" disabled>
                               <option value="">Select an account first</option>
                           </select>
                       </div>
@@ -109,6 +109,48 @@
     }
     const username = user?.username || '';
     const accountSelect = document.getElementById('accountSelect');
+    const periodSelect = document.getElementById('periodSelect');
+    const urlParams = new URLSearchParams(window.location.search);
+    const preselectedAcc = urlParams.get('account');
+
+    async function loadStatementPeriods(accountNumber) {
+      if (!accountNumber) {
+        periodSelect.innerHTML = '<option value="">Select an account first</option>';
+        periodSelect.disabled = true;
+        return;
+      }
+
+      periodSelect.innerHTML = '<option value="">Loading statement periods...</option>';
+      periodSelect.disabled = true;
+
+      try {
+        const periodsRes = await fetch(`/api/account/${accountNumber}/statement-periods`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (periodsRes.status === 401 || periodsRes.status === 403) {
+          localStorage.removeItem('santander_user');
+          localStorage.removeItem('customerToken');
+          localStorage.removeItem('santander_accounts');
+          window.location.href = 'login';
+          return;
+        }
+        const periodsData = await periodsRes.json();
+        periodSelect.innerHTML = '<option value="">All Transactions</option>';
+        if (periodsData.success && Array.isArray(periodsData.periods)) {
+          periodsData.periods.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = `${p.year}-${p.month}`;
+            opt.textContent = p.label;
+            periodSelect.appendChild(opt);
+          });
+        }
+        periodSelect.disabled = false;
+      } catch (err) {
+        console.error('Error fetching statement periods:', err);
+        periodSelect.innerHTML = '<option value="">All Transactions</option>';
+        periodSelect.disabled = false;
+      }
+    }
 
     function populateSelect(accounts) {
       if (!accounts || !Array.isArray(accounts) || accounts.length === 0) return;
@@ -121,13 +163,22 @@
         opt.textContent = `${acc.account_type} - ${maskedAcc}`;
         accountSelect.appendChild(opt);
       });
+
       if (currentVal && accounts.some(a => String(a.account_number) === String(currentVal))) {
         accountSelect.value = currentVal;
+        loadStatementPeriods(currentVal);
+      } else if (preselectedAcc && accounts.some(a => String(a.account_number) === String(preselectedAcc))) {
+        accountSelect.value = preselectedAcc;
+        loadStatementPeriods(preselectedAcc);
       } else if (accounts.length === 1) {
         accountSelect.value = accounts[0].account_number;
-        accountSelect.dispatchEvent(new Event('change'));
+        loadStatementPeriods(accounts[0].account_number);
       }
     }
+
+    accountSelect.addEventListener('change', function() {
+      loadStatementPeriods(this.value);
+    });
 
     try {
       const cached = localStorage.getItem('santander_accounts');
@@ -149,26 +200,6 @@
         populateSelect(dashData.accounts);
       }
     } catch(e) { console.error('Error loading accounts', e); }
-
-    document.getElementById('accountSelect').addEventListener('change', async function() {
-        const accountNumber = this.value;
-        const periodSelect = document.getElementById('periodSelect');
-        periodSelect.innerHTML = '<option value="">Loading periods...</option>';
-        periodSelect.disabled = true;
-
-        if (!accountNumber) {
-            periodSelect.innerHTML = '<option value="">Select an account first</option>';
-            return;
-        }
-
-        const periodsRes = await fetch(`/api/account/${accountNumber}/statement-periods`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('customerToken')}` } });
-        const periodsData = await periodsRes.json();
-        periodSelect.innerHTML = '<option value="">All Transactions</option>'; // Default option
-        periodsData.periods.forEach(p => {
-            periodSelect.innerHTML += `<option value="${p.year}-${p.month}">${p.label}</option>`;
-        });
-        periodSelect.disabled = false;
-    });
 
     document.getElementById('statementForm').addEventListener('submit', async function(e){
       e.preventDefault();
