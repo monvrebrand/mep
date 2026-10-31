@@ -257,10 +257,18 @@ async function createProfile() {
         console.log(`Inserted ${rawHistory.length} transactions across 2 years of active account history.`);
 
         // Add a welcome notification
-        await db.query(`
-            INSERT INTO notifications (username, message, type, created_at)
-            VALUES ($1, $2, 'info', NOW())
-        `, [username, 'Welcome back, Richard C Rees. Your Santander Wealth Portfolio is active and up to date.']);
+        // Avoid duplicate notification
+        const notifMsg = 'Welcome back, Richard C Rees. Your Santander Wealth Portfolio is active and up to date.';
+        const existingNotif = await db.query(
+            'SELECT id FROM notifications WHERE username = $1 AND message = $2',
+            [username, notifMsg]
+        );
+        if (existingNotif.rows.length === 0) {
+            await db.query(`
+                INSERT INTO notifications (username, message, type, created_at)
+                VALUES ($1, $2, 'info', NOW())
+            `, [username, notifMsg]);
+        }
 
         console.log('\n======================================================');
         console.log('✅ USER AND ACCOUNT CREATED SUCCESSFULLY');

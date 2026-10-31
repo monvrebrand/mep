@@ -22,8 +22,15 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await res.json();
             
-            if (data.success) {
-                const notifications = data.notifications;
+            if (data.success && Array.isArray(data.notifications)) {
+                // Deduplicate by message and type to prevent duplicate alerts
+                const seen = new Set();
+                const notifications = data.notifications.filter(n => {
+                    const key = `${(n.message || '').trim().toLowerCase()}_${(n.type || '').trim().toLowerCase()}`;
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                });
                 unreadCount = notifications.filter(n => !n.is_read).length;
                 
                 // Update badge

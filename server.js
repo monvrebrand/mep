@@ -422,13 +422,13 @@ app.put('/api/user/:username/profile', requireCustomerAuth, async (req, res) => 
 // Get unread notifications
 app.get('/api/user/:username/notifications', requireCustomerAuth, async (req, res) => {
     const { username } = req.params;
-    if (req.user.username !== username) {
+    if (username && username !== 'me' && username !== 'current' && req.user.username.toLowerCase() !== username.toLowerCase()) {
         return res.status(403).json({ success: false, message: 'Forbidden' });
     }
     try {
         const { rows } = await db.query(
-            'SELECT * FROM notifications WHERE username = $1 ORDER BY created_at DESC LIMIT 50',
-            [username]
+            'SELECT * FROM notifications WHERE LOWER(username) = LOWER($1) ORDER BY created_at DESC LIMIT 50',
+            [req.user.username]
         );
         res.json({ success: true, notifications: rows });
     } catch (err) {

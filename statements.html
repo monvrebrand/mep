@@ -184,7 +184,18 @@
             url += `?year=${year}&month=${month}`;
         }
 
-        const res = await fetch(url);
+        const res = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem('santander_user');
+          localStorage.removeItem('customerToken');
+          localStorage.removeItem('santander_accounts');
+          window.location.href = 'login';
+          return;
+        }
         const data = await res.json();
         if(data.success){
           currentTransactions = data.transactions; // Store for download
