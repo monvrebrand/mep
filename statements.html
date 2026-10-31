@@ -96,22 +96,57 @@
 <script>
   document.addEventListener('DOMContentLoaded', async function(){
     const userStr = localStorage.getItem('santander_user');
+    const token = localStorage.getItem('customerToken');
     let currentTransactions = []; // To store transactions for download
-    if(!userStr){ window.location.href='login'; return; }
-    const user = JSON.parse(userStr);
+    if(!userStr || !token){ window.location.href='login'; return; }
+    
+    let user;
+    try {
+      user = JSON.parse(userStr);
+    } catch(e) {
+      window.location.href='login';
+      return;
+    }
+    const username = user?.username || '';
+    const accountSelect = document.getElementById('accountSelect');
+
+    function populateSelect(accounts) {
+      if (!accounts || !Array.isArray(accounts) || accounts.length === 0) return;
+      const currentVal = accountSelect.value;
+      accountSelect.innerHTML = '<option value="">Select an account</option>';
+      accounts.forEach(acc => {
+        const opt = document.createElement('option');
+        opt.value = acc.account_number;
+        const maskedAcc = '****' + String(acc.account_number).slice(-4);
+        opt.textContent = `${acc.account_type} - ${maskedAcc}`;
+        accountSelect.appendChild(opt);
+      });
+      if (currentVal && accounts.some(a => String(a.account_number) === String(currentVal))) {
+        accountSelect.value = currentVal;
+      } else if (accounts.length === 1) {
+        accountSelect.value = accounts[0].account_number;
+        accountSelect.dispatchEvent(new Event('change'));
+      }
+    }
+
+    try {
+      const cached = localStorage.getItem('santander_accounts');
+      if (cached) populateSelect(JSON.parse(cached));
+    } catch(e) {}
 
     try{
-      const dashRes = await fetch(`/api/user/${user.username}/dashboard`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('customerToken')}` } });
+      const dashRes = await fetch(`/api/user/${encodeURIComponent(username)}/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (dashRes.status === 401 || dashRes.status === 403) {
+        localStorage.removeItem('santander_user');
+        localStorage.removeItem('customerToken');
+        localStorage.removeItem('santander_accounts');
+        window.location.href = 'login';
+        return;
+      }
       const dashData = await dashRes.json();
-      if(dashData.success){
-        const accountSelect = document.getElementById('accountSelect');
-        dashData.accounts.forEach(acc=>{
-          const opt = document.createElement('option'); 
-          opt.value = acc.account_number;
-          const maskedAcc = '****' + String(acc.account_number).slice(-4);
-          opt.textContent = `${acc.account_type} - ${maskedAcc}`;
-          accountSelect.appendChild(opt);
-        });
+      if(dashData.success && Array.isArray(dashData.accounts)){
+        localStorage.setItem('santander_accounts', JSON.stringify(dashData.accounts));
+        populateSelect(dashData.accounts);
       }
     } catch(e) { console.error('Error loading accounts', e); }
 

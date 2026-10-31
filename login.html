@@ -228,6 +228,9 @@
             if (data.success) {
                 localStorage.setItem('customerToken', data.token);
                 localStorage.setItem('santander_user', JSON.stringify(data.user));
+                if (data.accounts && Array.isArray(data.accounts)) {
+                    localStorage.setItem('santander_accounts', JSON.stringify(data.accounts));
+                }
                 window.location.href='inside';
             } else {
                 alert(data.message || 'Login failed');

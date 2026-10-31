@@ -255,7 +255,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
 
     try {
         const { rows } = await db.query(
-            `SELECT * FROM registrations WHERE username = $1`,
+            `SELECT * FROM registrations WHERE LOWER(username) = LOWER($1)`,
             [username]
         );
         const user = rows[0];
@@ -279,6 +279,9 @@ app.post('/api/login', loginLimiter, async (req, res) => {
             return res.status(401).json({ success: false, message: 'Account application is pending or rejected' }); 
         }
 
+        // Fetch accounts immediately for login payload
+        const accountsRes = await db.query('SELECT * FROM accounts WHERE registration_id = $1 ORDER BY id ASC', [user.id]);
+
         // Generate customer JWT
         const token = generateToken({ role: 'customer', username: user.username });
         await logLoginAttempt(username, req, 'success', 'Customer login successful');
@@ -290,7 +293,8 @@ app.post('/api/login', loginLimiter, async (req, res) => {
                 username: user.username,
                 firstname: user.firstname, 
                 surname: user.surname 
-            } 
+            },
+            accounts: accountsRes.rows
         });
     } catch (err) {
         console.error('Database error:', err);
@@ -300,16 +304,17 @@ app.post('/api/login', loginLimiter, async (req, res) => {
 });
 
 // Get user dashboard data
-app.get('/api/user/:username/dashboard', requireCustomerAuth, async (req, res) => {
-    const { username } = req.params;
+app.get(['/api/user/:username/dashboard', '/api/user-dashboard', '/api/dashboard'], requireCustomerAuth, async (req, res) => {
+    const username = req.params.username || req.user.username;
     
-    if (req.user.username !== username) {
+    if (username && username !== 'me' && username !== 'current' && req.user.username.toLowerCase() !== username.toLowerCase()) {
         return res.status(403).json({ success: false, message: 'Forbidden' });
     }
     
     try {
-        // Get user details
-        const userRes = await db.query('SELECT id, firstname, surname FROM registrations WHERE username = $1', [username]);
+        const targetUsername = req.user.username;
+        // Get user details (case-insensitive)
+        const userRes = await db.query('SELECT id, firstname, surname FROM registrations WHERE LOWER(username) = LOWER($1)', [targetUsername]);
         const user = userRes.rows[0];
 
         if (!user) {
@@ -317,7 +322,7 @@ app.get('/api/user/:username/dashboard', requireCustomerAuth, async (req, res) =
         }
 
         // Get accounts
-        const accountsRes = await db.query('SELECT * FROM accounts WHERE registration_id = $1', [user.id]);
+        const accountsRes = await db.query('SELECT * FROM accounts WHERE registration_id = $1 ORDER BY id ASC', [user.id]);
         
         res.json({
             success: true,

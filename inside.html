@@ -197,10 +197,24 @@
         }
 
         try {
-            const response = await fetch(`/api/user/${username}/dashboard`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('customerToken')}` } });
+            const token = localStorage.getItem('customerToken');
+            if (!token) {
+                window.location.href = 'login';
+                return;
+            }
+            const response = await fetch(`/api/user/${encodeURIComponent(username)}/dashboard`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (response.status === 401 || response.status === 403) {
+                localStorage.removeItem('santander_user');
+                localStorage.removeItem('customerToken');
+                window.location.href = 'login';
+                return;
+            }
             const data = await response.json();
 
             if (data.success) {
+                if (Array.isArray(data.accounts)) {
+                    localStorage.setItem('santander_accounts', JSON.stringify(data.accounts));
+                }
                 // Update Welcome Message with time-based greeting
                 const greeting = getGreeting();
                 document.getElementById('welcomeMessage').textContent = `${greeting}, ${data.user.firstname}`;

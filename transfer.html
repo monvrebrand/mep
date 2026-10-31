@@ -147,25 +147,88 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', async function(){
-    const userStr=localStorage.getItem('santander_user');
-    if(!userStr){window.location.href='login';return;}
-    const user=JSON.parse(userStr);
-    try{
-      const dash=await fetch(`/api/user/${user.username}/dashboard`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('customerToken')}` } });
-      const ddata=await dash.json();
-      if(ddata.success){
-        const fromSel=document.getElementById('fromAccount');
-        const toSel=document.getElementById('toAccount');
-        ddata.accounts.forEach(acc=>{
-          const o1=document.createElement('option');o1.value=acc.account_number;
-          const maskedAcc = '****' + String(acc.account_number).slice(-4);
-          o1.textContent=`${acc.account_type} - ${maskedAcc} (${new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(acc.balance)})`;
-          const o2=o1.cloneNode(true);
-          fromSel.appendChild(o1);
-          toSel.appendChild(o2);
-        });
+    const userStr = localStorage.getItem('santander_user');
+    const token = localStorage.getItem('customerToken');
+    if (!userStr || !token) {
+      window.location.href = 'login';
+      return;
+    }
+
+    let user;
+    try {
+      user = JSON.parse(userStr);
+    } catch(e) {
+      window.location.href = 'login';
+      return;
+    }
+
+    const username = user?.username || '';
+    const fromSel = document.getElementById('fromAccount');
+    const toSel = document.getElementById('toAccount');
+    const urlParams = new URLSearchParams(window.location.search);
+    const preselectedAcc = urlParams.get('account');
+
+    function populateSelects(accounts) {
+      if (!accounts || !Array.isArray(accounts) || accounts.length === 0) return;
+      const currentFrom = fromSel.value;
+      const currentTo = toSel.value;
+      fromSel.innerHTML = '<option value="">Choose account</option>';
+      toSel.innerHTML = '<option value="">Choose account</option>';
+
+      accounts.forEach(acc => {
+        const o1 = document.createElement('option');
+        o1.value = acc.account_number;
+        const maskedAcc = '****' + String(acc.account_number).slice(-4);
+        const bal = parseFloat(acc.balance) || 0;
+        o1.textContent = `${acc.account_type} - ${maskedAcc} (${new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(bal)})`;
+        const o2 = o1.cloneNode(true);
+        fromSel.appendChild(o1);
+        toSel.appendChild(o2);
+      });
+
+      if (preselectedAcc && accounts.some(a => String(a.account_number) === String(preselectedAcc))) {
+        fromSel.value = preselectedAcc;
+      } else if (currentFrom && accounts.some(a => String(a.account_number) === String(currentFrom))) {
+        fromSel.value = currentFrom;
+      } else if (accounts.length === 1) {
+        fromSel.value = accounts[0].account_number;
       }
-    }catch(e){console.error('load accounts',e);}    
+
+      if (currentTo && accounts.some(a => String(a.account_number) === String(currentTo))) {
+        toSel.value = currentTo;
+      }
+    }
+
+    // 1. Instant populate from local cache if present
+    try {
+      const cached = localStorage.getItem('santander_accounts');
+      if (cached) {
+        populateSelects(JSON.parse(cached));
+      }
+    } catch(e) {}
+
+    // 2. Fetch fresh live data
+    try {
+      const dash = await fetch(`/api/user/${encodeURIComponent(username)}/dashboard`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (dash.status === 401 || dash.status === 403) {
+        localStorage.removeItem('santander_user');
+        localStorage.removeItem('customerToken');
+        localStorage.removeItem('santander_accounts');
+        window.location.href = 'login';
+        return;
+      }
+
+      const ddata = await dash.json();
+      if (ddata.success && Array.isArray(ddata.accounts)) {
+        localStorage.setItem('santander_accounts', JSON.stringify(ddata.accounts));
+        populateSelects(ddata.accounts);
+      }
+    } catch(e) {
+      console.error('load accounts', e);
+    }    
     
     document.getElementById('transferForm').addEventListener('submit',async function(e){
       e.preventDefault();

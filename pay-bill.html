@@ -178,25 +178,80 @@
 <script>
   document.addEventListener('DOMContentLoaded', async function() {
     const userStr = localStorage.getItem('santander_user');
-    if (!userStr) { window.location.href='login'; return; }
-    const user = JSON.parse(userStr);
-
-    // load user accounts
+    const token = localStorage.getItem('customerToken');
+    if (!userStr || !token) { 
+      window.location.href = 'login'; 
+      return; 
+    }
+    
+    let user;
     try {
-      const dashRes = await fetch(`/api/user/${user.username}/dashboard`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('customerToken')}` } });
+      user = JSON.parse(userStr);
+    } catch (e) {
+      window.location.href = 'login';
+      return;
+    }
+
+    const username = user?.username || '';
+    const sel = document.getElementById('fromAccount');
+    const urlParams = new URLSearchParams(window.location.search);
+    const preselectedAcc = urlParams.get('account');
+
+    function populateSelect(accounts) {
+      if (!accounts || !Array.isArray(accounts) || accounts.length === 0) return;
+      const currentVal = sel.value;
+      sel.innerHTML = '<option value="">Select account</option>';
+      accounts.forEach(acc => {
+        const opt = document.createElement('option');
+        opt.value = acc.account_number;
+        const maskedAcc = '****' + String(acc.account_number).slice(-4);
+        const bal = parseFloat(acc.balance) || 0;
+        opt.textContent = `${acc.account_type} - ${maskedAcc} (${new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(bal)})`;
+        sel.appendChild(opt);
+      });
+
+      if (preselectedAcc && accounts.some(a => String(a.account_number) === String(preselectedAcc))) {
+        sel.value = preselectedAcc;
+      } else if (currentVal && accounts.some(a => String(a.account_number) === String(currentVal))) {
+        sel.value = currentVal;
+      } else if (accounts.length === 1) {
+        sel.value = accounts[0].account_number;
+      }
+    }
+
+    // 1. Instantly populate from local cache if present
+    try {
+      const cached = localStorage.getItem('santander_accounts');
+      if (cached) {
+        populateSelect(JSON.parse(cached));
+      }
+    } catch (e) {
+      console.error('Error reading cached accounts:', e);
+    }
+
+    // 2. Fetch fresh live accounts from backend
+    try {
+      const dashRes = await fetch(`/api/user/${encodeURIComponent(username)}/dashboard`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (dashRes.status === 401 || dashRes.status === 403) {
+        localStorage.removeItem('santander_user');
+        localStorage.removeItem('customerToken');
+        localStorage.removeItem('santander_accounts');
+        window.location.href = 'login';
+        return;
+      }
+
       const dashData = await dashRes.json();
-      if (dashData.success) {
-        const sel = document.getElementById('fromAccount');
-        dashData.accounts.forEach(acc => {
-          const opt = document.createElement('option');
-          opt.value = acc.account_number;
-          const maskedAcc = '****' + String(acc.account_number).slice(-4);
-          opt.textContent = `${acc.account_type} - ${maskedAcc} (${new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(acc.balance)})`;
-          sel.appendChild(opt);
-        });
+      if (dashData.success && Array.isArray(dashData.accounts)) {
+        localStorage.setItem('santander_accounts', JSON.stringify(dashData.accounts));
+        populateSelect(dashData.accounts);
+      } else if (sel.options.length <= 1) {
+        sel.innerHTML = '<option value="">No active accounts available</option>';
       }
     } catch (err) {
-      console.error('Error loading accounts for bill pay', err);
+      console.error('Error loading accounts for bill pay:', err);
     }
 
     document.getElementById('billForm').addEventListener('submit', async function(e) {
@@ -340,7 +395,12 @@
       };
     });
   });
-  function logout(){ localStorage.removeItem('santander_user'); window.location.href='index'; }
+  function logout(){ 
+    localStorage.removeItem('santander_user'); 
+    localStorage.removeItem('customerToken');
+    localStorage.removeItem('santander_accounts');
+    window.location.href='index'; 
+  }
 </script>
 <script src="js/notifications.js"></script>
 </body>
